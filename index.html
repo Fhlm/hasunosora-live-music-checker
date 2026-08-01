@@ -824,7 +824,7 @@
   <input type="text" id="userIdInput" placeholder="输入你的ID（非必填）" 
          style="padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); 
                 background: var(--card-bg); color: var(--text); font-size: 0.85rem; width: 100%; max-width: 300px;"
-         data-i18n-placeholder="userIdPlaceholder">
+         data-i18n-placeholder="userIdPlaceholder" oninput="saveUIState()">
 </div>
     <div id="selectList"></div>
     <div class="generate-wrap">
@@ -873,7 +873,7 @@
     <!-- 搜索和排序 -->
     <div class="search-sort-row">
       <input type="text" class="search-box" id="searchInput" data-i18n-placeholder="search" oninput="renderResults()">
-      <select class="sort-select" id="sortSelect" onchange="renderResults()">
+      <select class="sort-select" id="sortSelect" onchange="saveUIState();renderResults()">
         <option value="freq" data-i18n="sortFreq">頻度順</option>
         <option value="alpha" data-i18n="sortAlpha">五十音順</option>
         <option value="release" data-i18n="sortRelease">リリース順</option>
@@ -1035,6 +1035,7 @@ function setFilter(mode) {
   document.querySelectorAll('.filter-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.filter === mode);
   });
+  saveUIState();
   renderResults();
 }
 
@@ -5880,6 +5881,7 @@ const liveData = [
 // STATE
 // ============================================================
 const SELECT_KEY = "hasunosora-selected-performances-v2";
+const UI_STATE_KEY = "hasunosora-ui-state-v1";
 let selectedPerformances = new Set(); // Set of "liveId|setIdx"
 
 function loadState() {
@@ -5887,10 +5889,38 @@ function loadState() {
     const sel = localStorage.getItem(SELECT_KEY);
     if (sel) selectedPerformances = new Set(JSON.parse(sel));
   } catch(e) { selectedPerformances = new Set(); }
+  try {
+    const ui = JSON.parse(localStorage.getItem(UI_STATE_KEY) || '{}');
+    if (ui.userId) {
+      const inp = document.getElementById('userIdInput');
+      if (inp) inp.value = ui.userId;
+    }
+    if (ui.sortMode) {
+      const sel = document.getElementById('sortSelect');
+      if (sel) sel.value = ui.sortMode;
+    }
+    if (ui.filterMode) {
+      currentFilter = ui.filterMode;
+      document.querySelectorAll('.filter-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.filter === ui.filterMode);
+      });
+    }
+  } catch(e) {}
 }
 
 function saveSelection() {
   localStorage.setItem(SELECT_KEY, JSON.stringify([...selectedPerformances]));
+}
+
+function saveUIState() {
+  try {
+    const ui = {
+      userId: document.getElementById('userIdInput')?.value || '',
+      sortMode: document.getElementById('sortSelect')?.value || 'freq',
+      filterMode: currentFilter
+    };
+    localStorage.setItem(UI_STATE_KEY, JSON.stringify(ui));
+  } catch(e) {}
 }
 
 function perfKey(liveId, setIdx) { return `${liveId}|${setIdx}`; }
@@ -6278,6 +6308,7 @@ function goToResults() {
   document.getElementById('searchInput').value = '';
   currentFilter = 'all';
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
+  saveUIState();
   window.scrollTo(0, 0);
   renderResults();
 }
