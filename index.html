@@ -580,6 +580,64 @@
     font-size: 0.68rem;
     white-space: nowrap;
   }
+  .gen-tag {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-right: 0.3rem;
+  }
+  .gen-tag.gen-103 { background: #fde4ec; color: #c44569; }
+  .gen-tag.gen-104 { background: #e8f0fd; color: #3366cc; }
+  .gen-tag.gen-105 { background: #e8f8e8; color: #2a8a2a; }
+
+  /* Generation toggle */
+  .gen-toggle-wrap {
+    display: flex; align-items: center; gap: 0.4rem;
+    margin-left: auto;
+  }
+  .gen-toggle-wrap label {
+    font-size: 0.75rem; color: var(--text-secondary);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  .gen-toggle-wrap input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* Series toggle */
+  .series-toggle {
+    position: absolute;
+    top: 1rem;
+    left: 1.5rem;
+    z-index: 10;
+    display: flex;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+  }
+  .series-toggle button {
+    padding: 0.35rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .series-toggle button.active {
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    font-weight: 600;
+  }
+  .series-toggle button:hover:not(.active) {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
 
   /* 返回按钮 */
   .btn-back {
@@ -878,6 +936,10 @@
         <option value="alpha" data-i18n="sortAlpha">五十音順</option>
         <option value="release" data-i18n="sortRelease">リリース順</option>
       </select>
+      <div class="gen-toggle-wrap" id="genToggleWrap" style="display:none;">
+        <input type="checkbox" id="genToggle" onchange="saveUIState();renderResults()">
+        <label for="genToggle" data-i18n="genToggle">期別表示</label>
+      </div>
     </div>
 
     <!-- 结果标题 -->
@@ -933,6 +995,7 @@ const I18N = {
     filterAll: "全て",
     filterCollected: "回収済",
     filterMissing: "未回収",
+    genToggle: "期別表示",
     resultsTitle: "集計結果",
 
     userIdPlaceholder: "IDを入力（任意）",
@@ -970,6 +1033,7 @@ const I18N = {
     filterAll: "全部",
     filterCollected: "已回收",
     filterMissing: "未回收",
+    genToggle: "按期区分",
     resultsTitle: "统计结果",
 
     userIdPlaceholder: "输入你的ID（非必填）",
@@ -991,6 +1055,20 @@ const I18N = {
 
 let currentLang = 'ja';
 let currentFilter = 'all';
+let showGen = false; // 期別表示トグル
+
+function getPeriod(live) {
+  // Titleに明示的に期が含まれている場合
+  if (live.title.includes('103-105') || live.title.includes('103～105')) return '103-105';
+  if (live.title.includes('103期')) return '103';
+  if (live.title.includes('104期')) return '104';
+  if (live.title.includes('105期')) return '105';
+  // 年から推定（日本の学年：4月始まり）
+  const year = live.year;
+  if (year <= 2023) return '103';
+  if (year === 2024) return '104';
+  return '105';
+}
 
 function detectLang() {
   const saved = localStorage.getItem('hasunosora-lang');
@@ -5905,6 +5983,14 @@ function loadState() {
         t.classList.toggle('active', t.dataset.filter === ui.filterMode);
       });
     }
+    if (ui.showGen !== undefined) {
+      showGen = ui.showGen;
+      const genToggle = document.getElementById('genToggle');
+      if (genToggle) genToggle.checked = ui.showGen;
+    }
+    if (ui.series) {
+      currentSeries = ui.series;
+    }
   } catch(e) {}
 }
 
@@ -5917,7 +6003,9 @@ function saveUIState() {
     const ui = {
       userId: document.getElementById('userIdInput')?.value || '',
       sortMode: document.getElementById('sortSelect')?.value || 'freq',
-      filterMode: currentFilter
+      filterMode: currentFilter,
+      showGen: showGen,
+      series: currentSeries
     };
     localStorage.setItem(UI_STATE_KEY, JSON.stringify(ui));
   } catch(e) {}
@@ -6021,6 +6109,7 @@ function renderSelect() {
 function buildSongFreq() {
   const freq = new Map();
   liveData.forEach(live => {
+    const period = getPeriod(live);
     live.sets.forEach((set, setIdx) => {
       if (!selectedPerformances.has(perfKey(live.id, setIdx))) return;
       if (set.songs.length === 0) return;
@@ -6029,10 +6118,11 @@ function buildSongFreq() {
         const name = song.ja;
         if (seenInSet.has(name)) return;
         seenInSet.add(name);
-        if (!freq.has(name)) freq.set(name, { count: 0, lives: [] });
+        if (!freq.has(name)) freq.set(name, { count: 0, lives: [], periods: new Set() });
         const entry = freq.get(name);
         entry.count++;
         entry.lives.push({ title: live.title, label: set.label, date: live.date });
+        entry.periods.add(period);
       });
     });
   });
@@ -6087,7 +6177,7 @@ function renderResults() {
 
   // Collected songs
   freq.forEach((data, name) => {
-    items.push({ name, count: data.count, lives: data.lives, type: 'collected' });
+    items.push({ name, count: data.count, lives: data.lives, periods: data.periods, type: 'collected' });
   });
 
   // Missing songs
@@ -6158,7 +6248,7 @@ function renderResults() {
 
     html += `<div class="song-row ${cls}" onclick="toggleSongDetail(this)">
       <div class="song-rank">${rank}</div>
-      <div class="song-name">${escapeHtml(item.name)}</div>
+      <div class="song-name">${escapeHtml(item.name)}${showGen && item.periods ? Array.from(item.periods).sort().map(p => `<span class="gen-tag gen-${p}">${p}期</span>`).join('') : ''}</div>
       <div class="song-count">${item.count}</div>
       <div class="song-toggle">${toggleIcon}</div>
     </div>`;
@@ -6308,6 +6398,11 @@ function goToResults() {
   document.getElementById('searchInput').value = '';
   currentFilter = 'all';
   document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
+  // 期別トグルの表示/非表示
+  const genWrap = document.getElementById('genToggleWrap');
+  if (genWrap) genWrap.style.display = (currentSeries === 'hasunosora') ? 'flex' : 'none';
+  const genToggle = document.getElementById('genToggle');
+  if (genToggle) genToggle.checked = showGen;
   saveUIState();
   window.scrollTo(0, 0);
   renderResults();
