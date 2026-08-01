@@ -857,6 +857,10 @@
 <body>
 
 <div class="header">
+  <div class="series-toggle" id="seriesToggle">
+    <button data-series="hasunosora" class="active" onclick="setSeries('hasunosora')">🪷 蓮ノ空</button>
+    <button data-series="nijigasaki" onclick="setSeries('nijigasaki')">🌈 虹ヶ咲</button>
+  </div>
   <div class="lang-toggle" id="langToggle">
     <button data-lang="ja" class="active"><span class="flag">🇯🇵</span> 日本語</button>
     <button data-lang="zh"><span class="flag">🇨🇳</span> 中文</button>
@@ -1011,7 +1015,10 @@ const I18N = {
     disclaimerTitle: "⚠️ 免責事項",
     disclaimerText: "このページはAIによって自動生成されました。データはll-fans.jpなどの公開サイトから取得しています。正確性には最大限の注意を払っていますが、誤りや遗漏がある可能性があります。",
     disclaimerUsage: "このページは個人的な学習・参考のみを目的としており、商業利用は禁止されています。著作権侵害と思われる場合はご連絡ください。",
-    disclaimerUpdate: "データ更新日：2026年7月31日",
+    disclaimerUpdate: "データ更新日：2026年8月1日",
+    titleNiji: "虹ヶ咲 楽曲回収チェッカー",
+    subtitleNiji: "Nijigasaki Live Music Checker",
+    footerUnofficialNiji: "虹ヶ咲学園スクールアイドル同好会 非公式ファンサイト · ",
   },
   zh: {
     title: "莲之空 乐曲回收检查器",
@@ -1049,13 +1056,17 @@ const I18N = {
     disclaimerTitle: "⚠️ 免责声明",
     disclaimerText: "本页面由AI自动生成，数据来源于ll-fans.jp等公开网站。虽然已尽力确保准确性，但可能存在错误或遗漏。",
     disclaimerUsage: "本页面仅供个人学习参考使用，不得用于商业用途。如有侵权请联系删除。",
-    disclaimerUpdate: "数据更新时间：2026年7月31日",
+    disclaimerUpdate: "数据更新时间：2026年8月1日",
+    titleNiji: "虹咲 乐曲回收检查器",
+    subtitleNiji: "Nijigasaki Live Music Checker",
+    footerUnofficialNiji: "虹咲学园学园偶像同好会 非官方粉丝站 · ",
   }
 };
 
 let currentLang = 'ja';
 let currentFilter = 'all';
 let showGen = false; // 期別表示トグル
+let currentSeries = 'hasunosora'; // 'hasunosora' or 'nijigasaki'
 
 function getPeriod(live) {
   // Titleに明示的に期が含まれている場合
@@ -1101,6 +1112,7 @@ function setLang(lang) {
     });
   }
   document.title = I18N[lang].title + " — Hasunosora Music Checker";
+  applySeriesUI(); // 更新系列相关文本
   if (document.getElementById('pageSelect').classList.contains('active')) {
     renderSelect();
   } else {
@@ -1126,7 +1138,7 @@ document.getElementById('langToggle').addEventListener('click', function(e) {
 // ============================================================
 // DATA
 // ============================================================
-const liveData = [
+let liveData = [
   {
     "id": "bloom-the-dream",
     "year": 2023,
@@ -5956,6 +5968,250 @@ const liveData = [
 ];
 
 // ============================================================
+// Nijigasaki Data
+// ============================================================
+const nijigasakiData = [
+  {
+    "id": "1st-live", "year": 2019,
+    "title": "First Live \"with You\"",
+    "date": "2019.12.14-15",
+    "venue": "東京武蔵野の森総合体育館",
+    "sets": [
+      { "label": "Day.1", "songs": [
+        {"ja":"TOKIMEKI Runners"},{"ja":"夢への一歩"},{"ja":"開花宣言"},{"ja":"☆ワンダーランド☆"},{"ja":"ダイヤモンド"},
+        {"ja":"オードリー"},{"ja":"あなたの理想のヒロイン"},{"ja":"友 & 愛"},{"ja":"めっちゃGoing!!"},{"ja":"ドキピポ☆エモーション"},
+        {"ja":"テレテレパシー"},{"ja":"My Own Fairy-Tale"},{"ja":"眠れる森に行きたいな"},{"ja":"Evergreen"},{"ja":"声繋ごうよ"},
+        {"ja":"Wish"},{"ja":"Starlight"},{"ja":"CHASE!"},{"ja":"MELODY"},{"ja":"Love U my friends"},
+        {"ja":"CHASE!","note":"Encore"},{"ja":"TOKIMEKI Runners","note":"Encore"}
+      ]},
+      { "label": "Day.2", "songs": [
+        {"ja":"TOKIMEKI Runners"},{"ja":"夢への一歩"},{"ja":"開花宣言"},{"ja":"☆ワンダーランド☆"},{"ja":"ダイヤモンド"},
+        {"ja":"オードリー"},{"ja":"あなたの理想のヒロイン"},{"ja":"友 & 愛"},{"ja":"めっちゃGoing!!"},{"ja":"ドキピポ☆エモーション"},
+        {"ja":"テレテレパシー"},{"ja":"My Own Fairy-Tale"},{"ja":"眠れる森に行きたいな"},{"ja":"Evergreen"},{"ja":"声繋ごうよ"},
+        {"ja":"Wish"},{"ja":"Starlight"},{"ja":"CHASE!"},{"ja":"MELODY"},{"ja":"Love U my friends"},
+        {"ja":"ダイヤモンド","note":"Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "2nd-live", "year": 2020,
+    "title": "2nd Live! Brand New Story / Back to the TOKIMEKI",
+    "date": "2020.09.12-13",
+    "venue": "東京ガーデンシアター",
+    "sets": [
+      { "label": "Day.1 Brand New Story", "songs": [
+        {"ja":"未来ハーモニー"},{"ja":"無敵級ビリーバー"},{"ja":"SUPER NOVA"},{"ja":"Love Triangle"},
+        {"ja":"アナログハート"},{"ja":"Say Good-Bye 涙"},{"ja":"やがてひとつの物語"},{"ja":"Sing & Smile!!"},
+        {"ja":"Beautiful Moonlight"},{"ja":"LIKE IT! LOVE IT!"},{"ja":"楽しいの天才"},{"ja":"Margaret"},
+        {"ja":"Dream Land! Dream World!"},{"ja":"Cheer for you!!"},{"ja":"Fire Bird"},{"ja":"哀温ノ詩"},
+        {"ja":"Märchen Star"},{"ja":"決意の光"},{"ja":"TOKIMEKI Runners"},
+        {"ja":"夢への一歩","note":"Encore(short)"},{"ja":"あなたの理想のヒロイン","note":"Encore(short)"},
+        {"ja":"Evergreen","note":"Encore(short)"},{"ja":"ダイヤモンド","note":"Encore(short)"},
+        {"ja":"ドキピポ☆エモーション","note":"Encore(short)"},{"ja":"Starlight","note":"Encore(short)"},
+        {"ja":"眠れる森に行きたいな","note":"Encore(short)"},{"ja":"めっちゃGoing!!","note":"Encore(short)"},
+        {"ja":"CHASE!","note":"Encore(short)"},{"ja":"Just Believe!!!","note":"Encore"}
+      ]},
+      { "label": "Day.2 Back to the TOKIMEKI", "songs": [
+        {"ja":"TOKIMEKI Runners"},{"ja":"決意の光"},{"ja":"めっちゃGoing!!"},{"ja":"あなたの理想のヒロイン"},
+        {"ja":"CHASE!"},{"ja":"Starlight"},{"ja":"眠れる森に行きたいな"},{"ja":"ダイヤモンド"},
+        {"ja":"Evergreen"},{"ja":"ドキピポ☆エモーション"},{"ja":"夢への一歩"},{"ja":"SUPER NOVA"},
+        {"ja":"Love Triangle"},{"ja":"Sing & Smile!!"},{"ja":"Beautiful Moonlight"},{"ja":"Dream Land! Dream World!"},
+        {"ja":"Cheer for you!!"},{"ja":"Love U my friends"},{"ja":"Just Believe!!!"},
+        {"ja":"TOKIMEKI Runners","note":"Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "3rd-live", "year": 2021,
+    "title": "3rd Live! School Idol Festival ～夢の始まり～",
+    "date": "2021.05.08-09",
+    "venue": "埼玉・メットライフドーム",
+    "sets": [
+      { "label": "Day.1", "songs": [
+        {"ja":"虹色Passions!"},{"ja":"CHASE!"},{"ja":"Dream with You"},{"ja":"Poppin' Up!"},{"ja":"DIVE!"},
+        {"ja":"サイコーハート"},{"ja":"La Bella Patria"},{"ja":"ツナガルコネクト"},{"ja":"Butterfly"},
+        {"ja":"Solitude Rain"},{"ja":"VIVID WORLD"},{"ja":"Awakening Promise"},
+        {"ja":"夢がここからはじまるよ"},{"ja":"NEO SKY, NEO MAP!"},
+        {"ja":"Sweet Eyes"},{"ja":"全速ドリーマー"},{"ja":"未来ハーモニー"},
+        {"ja":"TOKIMEKI Runners","note":"Encore"},{"ja":"友 & 愛","note":"Encore(short)"},
+        {"ja":"My Own Fairy-Tale","note":"Encore(short)"},{"ja":"オードリー","note":"Encore(short)"},
+        {"ja":"開花宣言","note":"Encore(short)"},{"ja":"テレテレパシー","note":"Encore(short)"},
+        {"ja":"Wish","note":"Encore(short)"},{"ja":"MELODY","note":"Encore(short)"},
+        {"ja":"☆ワンダーランド☆","note":"Encore(short)"},{"ja":"声繋ごうよ","note":"Encore(short)"},
+        {"ja":"Love U my friends","note":"Encore"},{"ja":"NEO SKY, NEO MAP!","note":"Encore"}
+      ]},
+      { "label": "Day.2", "songs": [
+        {"ja":"虹色Passions!"},{"ja":"Dream with You"},{"ja":"Poppin' Up!"},{"ja":"DIVE!"},
+        {"ja":"サイコーハート"},{"ja":"La Bella Patria"},{"ja":"ツナガルコネクト"},{"ja":"Butterfly"},
+        {"ja":"Solitude Rain"},{"ja":"VIVID WORLD"},{"ja":"Awakening Promise"},
+        {"ja":"夢がここからはじまるよ"},{"ja":"NEO SKY, NEO MAP!"},
+        {"ja":"Awakening Promise","note":"Daily Song"},{"ja":"全速ドリーマー"},{"ja":"未来ハーモニー"},
+        {"ja":"TOKIMEKI Runners","note":"Encore"},{"ja":"Just Believe!!!","note":"Encore"},
+        {"ja":"NEO SKY, NEO MAP!","note":"Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "4th-live", "year": 2022,
+    "title": "4th Live! ～Love the Life We Live～",
+    "date": "2022.02.26-27",
+    "venue": "大阪・京セラドーム大阪",
+    "sets": [
+      { "label": "Day.1", "songs": [
+        {"ja":"L！L！L！"},{"ja":"TOKIMEKI Runners"},{"ja":"Break The System"},{"ja":"Turn it Up!"},
+        {"ja":"いつだってfor you!"},{"ja":"Silent Blaze"},{"ja":"Diabolic mulier"},{"ja":"ヤダ!"},
+        {"ja":"エイエ戦サー"},{"ja":"コンセントレイト!"},{"ja":"First Love Again"},{"ja":"TO BE YOURSELF"},
+        {"ja":"Toy Doll"},{"ja":"夜明珠"},{"ja":"Love U my friends"},
+        {"ja":"Maze Town","note":"Encore"},{"ja":"Swinging！","note":"Encore"},{"ja":"THE SECRET NiGHT","note":"Encore"},
+        {"ja":"MONSTER GIRLS","note":"Encore"},{"ja":"虹色Passions！","note":"Encore"},
+        {"ja":"Sweet Eyes","note":"Encore"},{"ja":"全速ドリーマー","note":"Encore"},
+        {"ja":"ミラクル STAY TUNE！","note":"Encore"},{"ja":"Just Believe!!!","note":"Encore"}
+      ]},
+      { "label": "Day.2", "songs": [
+        {"ja":"L！L！L！"},{"ja":"コンセントレイト!"},{"ja":"TO BE YOURSELF"},{"ja":"Silent Blaze"},
+        {"ja":"THE SECRET NiGHT"},{"ja":"いつだってfor you!"},{"ja":"Toy Doll"},{"ja":"First Love Again"},
+        {"ja":"Maze Town"},{"ja":"夜明珠"},{"ja":"Turn it Up!"},{"ja":"エイエ戦サー"},
+        {"ja":"Swinging！"},{"ja":"MONSTER GIRLS"},{"ja":"Diabolic mulier"},{"ja":"ヤダ!"},
+        {"ja":"Break The System"},{"ja":"Sweet Eyes"},{"ja":"全速ドリーマー"},{"ja":"TOKIMEKI Runners"},
+        {"ja":"Love U my friends","note":"Encore"},{"ja":"Happy Nyan! Days","note":"Encore"},
+        {"ja":"Twinkle Town","note":"Encore"},{"ja":"祭花 -saika-","note":"Encore"},
+        {"ja":"ミラクル STAY TUNE！","note":"Encore"},{"ja":"Just Believe!!!","note":"Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "5th-live", "year": 2022,
+    "title": "5th Live! 虹が咲く場所",
+    "date": "2022.09.10-11 / 09.17-18",
+    "venue": "東京ガーデンシアター / 武蔵野の森総合体育館",
+    "sets": [
+      { "label": "Colorful Dreams! Day.1", "songs": [
+        {"ja":"Colorful Dreams! Colorful Smiles!"},{"ja":"Eutopia"},{"ja":"ENJOY IT!"},{"ja":"Eternal Light"},
+        {"ja":"Infinity! Our wings!!"},{"ja":"EMOTION"},{"ja":"TOKIMEKI Runners","note":"TV Anime Ver."},
+        {"ja":"stars we chase"},{"ja":"Love U my friends","note":"TV Anime Ver."},
+        {"ja":"夜明珠","note":"Short"},{"ja":"☆ワンダーランド☆","note":"Short"},{"ja":"My Own Fairy-Tale","note":"Short"},
+        {"ja":"声繋ごうよ","note":"Short"},{"ja":"テレテレパシー","note":"Short"},{"ja":"Toy Doll","note":"Short"},
+        {"ja":"Wish","note":"Short"},{"ja":"友 & 愛","note":"Short"},{"ja":"翠いカナリア","note":"Short"},
+        {"ja":"オードリー","note":"Short"},{"ja":"MELODY","note":"Short"},{"ja":"開花宣言","note":"Short"},
+        {"ja":"Future Parade"},{"ja":"夢が僕らの太陽さ"},
+        {"ja":"繚乱!ビクトリーロード","note":"Encore"},{"ja":"MONSTER GIRLS","note":"Encore"},
+        {"ja":"恋するMagic!!","note":"Encore"},{"ja":"Poker face&お願い!Fairy","note":"Encore"},
+        {"ja":"4 SEASONS","note":"Encore"},{"ja":"Hurray Hurray","note":"Encore"},
+        {"ja":"L! L! L!","note":"Encore"},{"ja":"Love U my friends","note":"Encore"}
+      ]},
+      { "label": "Next TOKIMEKI Day.2", "songs": [
+        {"ja":"Colorful Dreams! Colorful Smiles!"},{"ja":"Eutopia"},{"ja":"ENJOY IT!"},{"ja":"Eternal Light"},
+        {"ja":"Infinity! Our wings!!"},{"ja":"EMOTION"},{"ja":"TOKIMEKI Runners","note":"TV Anime Ver."},
+        {"ja":"stars we chase"},{"ja":"Love U my friends","note":"TV Anime Ver."},
+        {"ja":"Future Parade"},{"ja":"夢が僕らの太陽さ"},
+        {"ja":"ツナガルコネクト"},{"ja":"Butterfly"},{"ja":"DIVE!"},{"ja":"Solitude Rain"},
+        {"ja":"サイコーハート"},{"ja":"La Bella Patria"},{"ja":"VIVID WORLD"},{"ja":"Poppin' Up!"},
+        {"ja":"Dream with You"},{"ja":"Love U my friends"},
+        {"ja":"繚乱!ビクトリーロード","note":"Encore"},{"ja":"トワイライト","note":"Encore"},
+        {"ja":"永遠の一瞬","note":"Encore"},{"ja":"Hurray Hurray","note":"Encore(12人)"},
+        {"ja":"TOKIMEKI Runners","note":"Encore"},{"ja":"Future Parade","note":"Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "6th-live", "year": 2023,
+    "title": "6th Live! I love You ⇆ You love Me",
+    "date": "2023.12.23-24 / 2024.01.13-14",
+    "venue": "愛知・Aichi Sky Expo / 神奈川・Kアリーナ横浜",
+    "sets": [
+      { "label": "愛知 DAY.1", "songs": [
+        {"ja":"KAGAYAKI Don't forget!"},{"ja":"小悪魔LOVE♡"},{"ja":"咬福論"},{"ja":"背伸びしたって"},
+        {"ja":"Request for U"},{"ja":"私はマグネット"},{"ja":"Cooking with Love"},{"ja":"Feel Alive"},
+        {"ja":"Walking Dream"},{"ja":"My Shadow"},{"ja":"Lemonade"},{"ja":"Waku Waku! Monday Morning"},
+        {"ja":"恋するSunflower"},{"ja":"5201314"},{"ja":"チェリーボム"},{"ja":"Twinkle Town"},
+        {"ja":"サンタが街にやってくる"},{"ja":"Sugar Sugar Yummy Yummy Parfait"},
+        {"ja":"Go Our Way！"},{"ja":"Just Believe!!!","note":"12人Ver."},{"ja":"Fly with You!!"},
+        {"ja":"L！L！L！","note":"Encore"},{"ja":"Margaret","note":"Encore(short)"},
+        {"ja":"夜明珠","note":"Encore(short)"},{"ja":"Say Good-Bye 涙","note":"Encore(short)"},
+        {"ja":"Sweet Eyes","note":"Encore"},{"ja":"TOKIMEKI Runners","note":"Encore(12人)"},
+        {"ja":"わちゅごなどぅー","note":"Encore"},{"ja":"OUR P13CES!!!","note":"Encore"},
+        {"ja":"SINGING, DREAMING, NOW!","note":"Encore"}
+      ]},
+      { "label": "愛知 DAY.2", "songs": [
+        {"ja":"KAGAYAKI Don't forget!"},{"ja":"チェリーボム"},{"ja":"Cooking with Love"},{"ja":"My Shadow"},
+        {"ja":"Waku Waku! Monday Morning"},{"ja":"5201314"},{"ja":"恋するSunflower"},{"ja":"Request for U"},
+        {"ja":"背伸びしたって"},{"ja":"Feel Alive"},{"ja":"Walking Dream"},{"ja":"私はマグネット"},
+        {"ja":"小悪魔LOVE♡"},{"ja":"Lemonade"},{"ja":"咬福論"},{"ja":"Twinkle Town"},
+        {"ja":"サンタが街にやってくる"},{"ja":"Wawawa☆What's up!"},{"ja":"Go Our Way！"},
+        {"ja":"Just Believe!!!","note":"12人Ver."},{"ja":"Fly with You!!"},
+        {"ja":"Love U my friends","note":"Encore(12人)"},{"ja":"あなたの理想のヒロイン","note":"Encore(short)"},
+        {"ja":"My Own Fairy-Tale","note":"Encore(short)"},{"ja":"ヤダ！","note":"Encore(short)"},
+        {"ja":"Sweet Eyes","note":"Encore"},{"ja":"TOKIMEKI Runners","note":"Encore(12人)"},
+        {"ja":"わちゅごなどぅー","note":"Encore"},{"ja":"OUR P13CES!!!","note":"Encore"},
+        {"ja":"SINGING, DREAMING, NOW!","note":"Encore"}
+      ]},
+      { "label": "神奈川 DAY.1", "songs": [
+        {"ja":"KAGAYAKI Don't forget!"},{"ja":"小悪魔LOVE♡"},{"ja":"咬福論"},{"ja":"背伸びしたって"},
+        {"ja":"Request for U"},{"ja":"私はマグネット"},{"ja":"Cooking with Love"},{"ja":"Feel Alive"},
+        {"ja":"Walking Dream"},{"ja":"My Shadow"},{"ja":"Lemonade"},{"ja":"Waku Waku! Monday Morning"},
+        {"ja":"恋するSunflower"},{"ja":"5201314"},{"ja":"チェリーボム"},{"ja":"New Year's March！"},
+        {"ja":"Happy New Year Days"},{"ja":"Go Our Way！"},{"ja":"Just Believe!!!","note":"12人Ver."},
+        {"ja":"Fly with You!!"},
+        {"ja":"L！L！L！","note":"Encore"},{"ja":"友 & 愛","note":"Encore(short)"},
+        {"ja":"First Love Again","note":"Encore(short)"},{"ja":"声繋ごうよ","note":"Encore(short)"},
+        {"ja":"TOKIMEKI Runners","note":"Encore(12人)"},{"ja":"恋するMagic!!","note":"Encore"},
+        {"ja":"わちゅごなどぅー","note":"Encore"},{"ja":"OUR P13CES!!!","note":"Encore"},
+        {"ja":"SINGING, DREAMING, NOW!","note":"Encore"}
+      ]},
+      { "label": "神奈川 DAY.2", "songs": [
+        {"ja":"KAGAYAKI Don't forget!"},{"ja":"チェリーボム"},{"ja":"Cooking with Love"},{"ja":"My Shadow"},
+        {"ja":"Waku Waku! Monday Morning"},{"ja":"5201314"},{"ja":"恋するSunflower"},{"ja":"Request for U"},
+        {"ja":"背伸びしたって"},{"ja":"Feel Alive"},{"ja":"Walking Dream"},{"ja":"私はマグネット"},
+        {"ja":"小悪魔LOVE♡"},{"ja":"Lemonade"},{"ja":"咬福論"},{"ja":"New Year's March！"},
+        {"ja":"Happy New Year Days"},{"ja":"Go Our Way！"},{"ja":"Just Believe!!!","note":"12人Ver."},
+        {"ja":"Fly with You!!"},
+        {"ja":"Love U my friends","note":"Encore(12人)"},{"ja":"Fire Bird","note":"Encore(short)"},
+        {"ja":"決意の光","note":"Encore(short)"},{"ja":"Toy Doll","note":"Encore(short)"},
+        {"ja":"TOKIMEKI Runners","note":"Encore(12人)"},{"ja":"恋するMagic!!","note":"Encore"},
+        {"ja":"わちゅごなどぅー","note":"Encore"},{"ja":"OUR P13CES!!!","note":"Encore"},
+        {"ja":"SINGING, DREAMING, NOW!","note":"Encore"},{"ja":"Fly with You!!","note":"Double Encore"}
+      ]}
+    ]
+  },
+  {
+    "id": "7th-live", "year": 2024,
+    "title": "7th Live! NEW TOKIMEKI LAND",
+    "date": "2024.10.19-20",
+    "venue": "神奈川・Kアリーナ横浜",
+    "sets": [
+      { "label": "Day.1", "songs": [
+        {"ja":"Just Believe!!!","note":"12人Ver."},{"ja":"虹ヶ咲学園校歌","note":"Rock Ver."},
+        {"ja":"Rise Up High!"},{"ja":"Daydream Mermaid"},{"ja":"Cara Tesoro"},{"ja":"PHOENIX"},{"ja":"Stellar Stream"},
+        {"ja":"Colorful Dreams! Colorful Smiles!","note":"Short"},{"ja":"虹色Passions！","note":"Short"},
+        {"ja":"Dream with You","note":"Short"},{"ja":"Poppin' Up!"},{"ja":"DIVE!"},{"ja":"サイコーハート"},
+        {"ja":"La Bella Patria","note":"Short"},{"ja":"ツナガルコネクト"},{"ja":"Butterfly","note":"Short"},
+        {"ja":"Solitude Rain","note":"Short"},{"ja":"VIVID WORLD"},{"ja":"夢がここからはじまるよ"},
+        {"ja":"Eutopia","note":"Short"},{"ja":"EMOTION"},{"ja":"stars we chase"},{"ja":"Future Parade"},
+        {"ja":"TOKIMEKI Runners","note":"12人Ver."},
+        {"ja":"繚乱！ビクトリーロード","note":"Encore"},{"ja":"トワイライト","note":"Encore"},
+        {"ja":"Hurray Hurray","note":"Encore(12人)"},{"ja":"Fly with You!!","note":"Encore"},
+        {"ja":"どこにいても君は君","note":"Encore"}
+      ]},
+      { "label": "Day.2", "songs": [
+        {"ja":"Just Believe!!!","note":"12人Ver."},{"ja":"虹ヶ咲学園校歌","note":"Rock Ver."},
+        {"ja":"Rise Up High!"},{"ja":"Daydream Mermaid"},{"ja":"Cara Tesoro"},{"ja":"PHOENIX"},{"ja":"Stellar Stream"},
+        {"ja":"Colorful Dreams! Colorful Smiles!","note":"Short"},{"ja":"未来ハーモニー","note":"Short"},
+        {"ja":"Dream with You","note":"Short"},{"ja":"Poppin' Up!"},{"ja":"DIVE!"},{"ja":"サイコーハート"},
+        {"ja":"La Bella Patria","note":"Short"},{"ja":"ツナガルコネクト"},{"ja":"Butterfly","note":"Short"},
+        {"ja":"Solitude Rain","note":"Short"},{"ja":"VIVID WORLD"},{"ja":"夢がここからはじまるよ"},
+        {"ja":"Eutopia","note":"Short"},{"ja":"EMOTION"},{"ja":"stars we chase"},{"ja":"Future Parade"},
+        {"ja":"TOKIMEKI Runners","note":"12人Ver."},
+        {"ja":"繚乱！ビクトリーロード","note":"Encore"},{"ja":"Level Oops! Adventures","note":"Encore"},
+        {"ja":"Hurray Hurray","note":"Encore(12人)"},{"ja":"Fly with You!!","note":"Encore"},
+        {"ja":"どこにいても君は君","note":"Encore"}
+      ]}
+    ]
+  }
+];
+
+const hasunosoraData = liveData; // 莲ノ空数据的引用
+
+// ============================================================
 // STATE
 // ============================================================
 const SELECT_KEY = "hasunosora-selected-performances-v2";
@@ -6425,11 +6681,69 @@ function escapeHtml(str) {
 }
 
 // ============================================================
+// SERIES SWITCHING
+// ============================================================
+function applySeriesUI() {
+  // 切换 logo / 标题
+  const logo = document.querySelector('.logo-icon');
+  const title = document.querySelector('.header h1');
+  const sub = document.querySelector('.header .sub');
+  const isHasu = currentSeries === 'hasunosora';
+
+  if (logo) logo.textContent = isHasu ? '🪷' : '🌈';
+  if (title) {
+    title.dataset.i18n = isHasu ? 'title' : 'titleNiji';
+  }
+  if (sub) {
+    sub.dataset.i18n = isHasu ? 'subtitle' : 'subtitleNiji';
+  }
+  // 更新当前语言文本
+  if (title && I18N[currentLang]) title.textContent = I18N[currentLang][title.dataset.i18n] || title.textContent;
+  if (sub && I18N[currentLang]) sub.textContent = I18N[currentLang][sub.dataset.i18n] || sub.textContent;
+
+  // 页脚
+  const footerUnofficial = document.querySelector('[data-i18n="footerUnofficial"]');
+  if (footerUnofficial) {
+    footerUnofficial.dataset.i18n = isHasu ? 'footerUnofficial' : 'footerUnofficialNiji';
+    if (I18N[currentLang]) footerUnofficial.textContent = I18N[currentLang][footerUnofficial.dataset.i18n] || footerUnofficial.textContent;
+  }
+  document.title = (isHasu ? I18N[currentLang].title : I18N[currentLang].titleNiji) + " — Hasunosora Music Checker";
+
+  // toggle 按钮 active 状态
+  document.querySelectorAll('.series-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.series === currentSeries);
+  });
+}
+
+function setSeries(series) {
+  if (series === currentSeries) return;
+  currentSeries = series;
+  // 切换数据源
+  liveData = (series === 'hasunosora') ? hasunosoraData : nijigasakiData;
+  // 清除旧选中
+  selectedPerformances.clear();
+  saveSelection();
+  // 更新选择页的 renderSelect 和 UI
+  applySeriesUI();
+  saveUIState();
+  // 重新渲染
+  const pageSelect = document.getElementById('pageSelect');
+  if (pageSelect && pageSelect.classList.contains('active')) {
+    renderSelect();
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 loadState();
 currentLang = detectLang();
+// 初始化数据源
+if (currentSeries === 'nijigasaki') {
+  liveData = nijigasakiData;
+}
 setLang(currentLang);
+applySeriesUI();
 </script>
 
 </body>
