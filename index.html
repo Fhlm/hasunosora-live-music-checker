@@ -1,0 +1,6285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<meta name="theme-color" content="#e8739a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<title>蓮ノ空 楽曲回収チェッカー — Hasunosora Music Checker</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #faf5f7;
+    --card-bg: #ffffff;
+    --text: #2d1b24;
+    --text-secondary: #6b4d5c;
+    --accent: #e8739a;
+    --accent-light: #fde4ec;
+    --accent-gradient: linear-gradient(135deg, #e8739a, #f0a0be);
+    --border: #f0d8e0;
+    --shadow: 0 2px 12px rgba(232, 115, 154, 0.08);
+    --shadow-hover: 0 4px 20px rgba(232, 115, 154, 0.15);
+    --cherry: #e8739a;
+    --cherry-dark: #c44569;
+    --cherry-light: #fdf0f4;
+    --select-border: #e0c8d0;
+    --progress-bg: #f5e8ec;
+    --divider: #f5e8ec;
+    --heat-1: #fde4ec;
+    --heat-2: #f5c0d4;
+    --heat-3: #ed9bb9;
+    --heat-4: #e8739a;
+    --heat-5: #d4557e;
+    --heat-6: #c44569;
+    --tag-bg: #fde4ec;
+    --tag-text: #c44569;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    min-height: 100vh;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: var(--accent-gradient);
+    color: #fff;
+    padding: 2rem 1.5rem 1.8rem;
+    padding: 2rem 1.5rem 1.8rem;
+    padding-top: max(2rem, env(safe-area-inset-top));
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.12) 0%, transparent 50%);
+  }
+  .header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    position: relative;
+    margin-bottom: 0.2rem;
+  }
+  .header .sub {
+    font-size: 0.82rem;
+    opacity: 0.85;
+    position: relative;
+    font-weight: 400;
+  }
+  .header .logo-icon {
+    font-size: 1.8rem;
+    display: block;
+    margin-bottom: 0.4rem;
+    position: relative;
+  }
+
+  /* Language Toggle */
+  .lang-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    z-index: 10;
+    display: flex;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    backdrop-filter: blur(4px);
+  }
+  .lang-toggle button {
+    padding: 0.35rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+  .lang-toggle button.active {
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    font-weight: 600;
+  }
+  .lang-toggle button:hover:not(.active) {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  .lang-toggle .flag { font-size: 1rem; }
+
+  /* ============ PAGE SYSTEM ============ */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ============ PAGE: SELECTION ============ */
+  .select-container {
+    max-width: 900px;
+    margin: 1.5rem auto 3rem;
+    padding: 0 1.5rem;
+  }
+  .select-header {
+    text-align: center;
+    margin-bottom: 1.2rem;
+  }
+  .select-header h2 { font-size: 1.2rem; color: var(--cherry-dark); margin-bottom: 0.3rem; }
+  .select-header p { font-size: 0.82rem; color: var(--text-secondary); }
+
+  .select-controls {
+    display: flex; gap: 0.5rem; margin-bottom: 1rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .btn {
+    padding: 0.45rem 1rem; border-radius: 8px;
+    border: 1.5px solid var(--border); background: var(--card-bg);
+    color: var(--text-secondary); font-size: 0.8rem; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .btn { touch-action: manipulation; }
+  .btn:hover { border-color: var(--accent); color: var(--cherry); background: var(--cherry-light); }
+  .btn.primary {
+    background: var(--accent-gradient); color: #fff; border: none;
+    font-weight: 600; padding: 0.6rem 2.5rem; font-size: 0.9rem;
+    border-radius: 10px; box-shadow: 0 2px 8px rgba(232, 115, 154, 0.3);
+  }
+  .btn.primary:hover {
+    box-shadow: 0 4px 16px rgba(232, 115, 154, 0.45);
+    background: linear-gradient(135deg, #d8658a, #e893b0);
+  }
+  .btn.primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+  .select-year-section { margin-bottom: 1.2rem; }
+  .select-year-label {
+    font-size: 1.1rem; font-weight: 700; color: var(--cherry);
+    margin-bottom: 0.6rem; padding-left: 0.2rem;
+  }
+
+  .select-live-group { margin-bottom: 0.8rem; }
+  .select-live-group-header {
+    display: flex; align-items: center; gap: 0.7rem;
+    padding: 0.65rem 0.8rem; border-radius: 10px;
+    cursor: pointer; transition: background 0.2s; user-select: none;
+  }
+  .select-live-group-header:hover { background: var(--cherry-light); }
+  .select-live-group-header .select-checkbox {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 2px solid #d4b8c2; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; color: transparent; transition: all 0.2s;
+  }
+  .select-live-group-header .select-checkbox.checked {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .select-group-info { flex: 1; min-width: 0; }
+  .select-group-title { font-weight: 600; font-size: 0.88rem; line-height: 1.35; }
+  .select-meta {
+    font-size: 0.73rem; color: var(--text-secondary);
+    margin-top: 0.15rem; display: flex; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .select-group-arrow {
+    color: var(--text-secondary); font-size: 0.9rem;
+    flex-shrink: 0; width: 22px; text-align: center;
+  }
+
+  .select-live-performances {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    padding: 0.3rem 0 0.3rem 2.2rem;
+  }
+  .select-perf-card {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.7rem; background: var(--card-bg);
+    border: 1.5px solid var(--select-border); border-radius: 8px;
+    cursor: pointer; transition: all 0.2s; user-select: none; white-space: nowrap;
+  }
+  .select-perf-card:hover { border-color: var(--accent); background: var(--cherry-light); }
+  .select-perf-card { touch-action: manipulation; }
+  .select-perf-card.selected { border-color: var(--accent); background: var(--cherry-light); }
+  .select-perf-card .select-checkbox {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 2px solid #d4b8c2; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: transparent; transition: all 0.2s;
+  }
+  .select-perf-card.selected .select-checkbox {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  .select-perf-info { display: flex; align-items: center; gap: 0.4rem; }
+  .select-perf-label { font-size: 0.8rem; font-weight: 500; }
+  .select-perf-count {
+    font-size: 0.68rem; color: var(--text-secondary);
+    background: var(--bg); padding: 0.1rem 0.4rem; border-radius: 6px;
+  }
+  .select-perf-count.empty { color: #c0a0aa; font-style: italic; }
+
+  .generate-wrap { text-align: center; margin-top: 1.5rem; }
+  .generate-wrap .selected-count {
+    font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.8rem;
+  }
+
+  /* ============ PAGE: RESULTS ============ */
+  .results-page-bg {
+    background: #e8f4f8;
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+
+  /* 统计卡片 */
+  .stats-cards {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 0.5rem;
+    display: flex;
+    gap: 0.8rem;
+  }
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 16px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.3rem;
+  }
+  .stat-label {
+    color: #00aacc;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+  .stat-num {
+    font-size: 0.9rem;
+    color: #888;
+    font-weight: 500;
+  }
+  .stat-num .accent {
+    color: #00aacc;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-right: 0.1rem;
+  }
+  .stat-bar-track {
+    height: 4px;
+    background: #e0e8ec;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ccee, #00aacc);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+  .stat-pct {
+    text-align: right;
+    font-size: 0.7rem;
+    color: #888;
+    margin-top: 0.2rem;
+  }
+
+  /* 工具栏 */
+  .results-toolbar {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0.5rem 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* 分享按钮 */
+  .share-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    min-height: 36px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .share-btn:hover { background: #555; }
+  .share-btn:active { transform: scale(0.96); }
+  .share-btn:disabled { opacity: 0.6; cursor: wait; }
+
+  /* 加载遮罩 */
+  .export-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .export-overlay-content {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .export-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f0e8ec;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .export-overlay-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* 图片导出容器（隐藏，仅用于截图） */
+  .export-capture {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 800px;
+    background: #e8f4f8;
+    padding: 2rem 2rem 1rem;
+    z-index: -1;
+  }
+
+  /* 筛选标签 */
+  .filter-tabs {
+    display: flex;
+    gap: 0.4rem;
+    flex: 1;
+  }
+  .filter-tab {
+    flex: 1;
+    padding: 0.45rem 0.5rem;
+    border: none;
+    border-radius: 10px;
+    background: #fff;
+    color: #666;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .filter-tab:hover {
+    background: #f0f8fc;
+    color: #00aacc;
+  }
+  .filter-tab.active {
+    background: #ff6699;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(255, 102, 153, 0.3);
+  }
+
+  /* 搜索和排序 */
+  .search-sort-row {
+    max-width: 900px;
+    margin: 0.5rem auto 0;
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .search-box {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: 1px solid #d0e4ec;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: #2d1b24;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus {
+    border-color: #00aacc;
+  }
+  .search-box::placeholder {
+    color: #a0b8c0;
+  }
+  .sort-select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #d0e4ec;
+    border-radius: 12px;
+    background: #fff;
+    font-size: 0.8rem;
+    font-family: inherit;
+    color: #2d1b24;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .sort-select:focus {
+    border-color: #00aacc;
+  }
+
+  /* 结果标题 */
+  .results-title {
+    max-width: 900px;
+    margin: 0.8rem auto 0;
+    padding: 0 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d1b24;
+  }
+
+  /* 歌曲列表 */
+  .results-container {
+    max-width: 900px;
+    margin: 0.8rem auto 0;
+    padding: 0 1.5rem;
+  }
+
+  .song-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .song-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .song-row:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .song-row.opened {
+    border-radius: 12px 12px 0 0;
+    box-shadow: none;
+    margin-bottom: 0;
+  }
+  .song-row.missing {
+    opacity: 0.6;
+  }
+  .song-row.missing .song-name {
+    color: #bbb;
+  }
+  .song-row.missing .song-count {
+    color: #ccc;
+  }
+
+  .song-rank {
+    font-size: 0.75rem;
+    color: #aaa;
+    min-width: 28px;
+    text-align: center;
+    font-weight: 500;
+  }
+  .song-name {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d1b24;
+    line-height: 1.4;
+  }
+  .song-row.collected .song-name {
+    color: #00aacc;
+    font-weight: 600;
+  }
+  .song-count {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ff6699;
+    min-width: 36px;
+    text-align: right;
+    line-height: 1;
+  }
+  .song-toggle {
+    font-size: 0.7rem;
+    color: #ccc;
+    transition: transform 0.2s;
+    min-width: 16px;
+    text-align: center;
+  }
+  .song-row.opened .song-toggle {
+    transform: rotate(180deg);
+    color: #00aacc;
+  }
+  .song-row.missing .song-toggle {
+    visibility: hidden;
+  }
+
+  /* 展开详情 */
+  .song-detail {
+    display: none;
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    padding: 0 1rem 0.75rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .song-detail.open {
+    display: block;
+  }
+  .song-detail-inner {
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0e8ec;
+  }
+  .detail-title {
+    font-size: 0.72rem;
+    color: #888;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.03em;
+  }
+  .detail-lives {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .detail-tag {
+    background: #e8f4f8;
+    color: #0088aa;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  /* 返回按钮 */
+  .btn-back {
+    padding: 0.45rem 1rem;
+    border-radius: 8px;
+    border: 1.5px solid #d0e4ec;
+    background: #fff;
+    color: #00aacc;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: 600;
+  }
+  .btn-back:hover {
+    background: #e8f4f8;
+    border-color: #00aacc;
+  }
+
+  /* 无结果 */
+  .no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+  }
+  .no-results .emoji {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    color: var(--text-secondary);
+    font-size: 0.73rem;
+    border-top: 1px solid var(--divider);
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--bg);
+  }
+  .footer a {
+    color: var(--cherry);
+    text-decoration: none;
+  }
+  .footer a:hover { text-decoration: underline; }
+
+  /* Responsive — Tablet */
+  @media (max-width: 768px) {
+    .header { padding: 1.5rem 1rem 1.3rem; }
+    .header h1 { font-size: 1.3rem; }
+    .select-container { padding: 0 1rem; }
+    .stats-cards { padding: 0.8rem 1rem 0.4rem; gap: 0.6rem; }
+    .stat-card { padding: 0.8rem 1rem; border-radius: 14px; }
+    .results-toolbar { padding: 0.4rem 1rem; gap: 0.4rem; }
+    .search-sort-row { padding: 0 1rem; }
+    .results-container { padding: 0 1rem; }
+    .results-title { padding: 0 1rem; }
+  }
+
+  /* Responsive — Mobile */
+  @media (max-width: 600px) {
+    /* Header */
+    .header { padding: 1.2rem 0.8rem 1.1rem; }
+    .header h1 { font-size: 1.1rem; letter-spacing: 0; }
+    .header .sub { font-size: 0.72rem; }
+    .header .logo-icon { font-size: 1.6rem; margin-bottom: 0.2rem; }
+    .lang-toggle { top: 0.5rem; right: 0.6rem; border-radius: 16px; }
+    .lang-toggle button { padding: 0.25rem 0.5rem; font-size: 0.72rem; gap: 0.2rem; }
+    .lang-toggle .flag { font-size: 0.9rem; }
+
+    /* Selection page */
+    .select-container { padding: 0 0.8rem; margin: 1rem auto 2rem; }
+    .select-header h2 { font-size: 1.05rem; }
+    .select-header p { font-size: 0.75rem; }
+    .select-controls { gap: 0.4rem; }
+    .btn { padding: 0.4rem 0.8rem; font-size: 0.75rem; }
+    .btn.primary { padding: 0.55rem 2rem; font-size: 0.85rem; }
+    .select-year-label { font-size: 1rem; }
+    .select-live-group-header { padding: 0.5rem 0.6rem; gap: 0.5rem; }
+    .select-group-title { font-size: 0.82rem; }
+    .select-meta { font-size: 0.68rem; gap: 0.35rem; }
+    .select-live-performances {
+      padding: 0.2rem 0 0.2rem 0.5rem;
+      gap: 0.3rem;
+    }
+    .select-perf-card {
+      padding: 0.35rem 0.5rem;
+      gap: 0.3rem;
+      min-height: 36px;
+    }
+    .select-perf-label { font-size: 0.75rem; }
+    .select-perf-count { font-size: 0.63rem; }
+    .select-live-group-header .select-checkbox { width: 18px; height: 18px; }
+    .select-perf-card .select-checkbox { width: 16px; height: 16px; }
+
+    /* Results page */
+    .results-page-bg { padding-bottom: 1.5rem; }
+    .stats-cards {
+      padding: 0.6rem 0.8rem 0.3rem;
+      gap: 0.5rem;
+      flex-direction: row;
+    }
+    .stat-card { padding: 0.7rem 0.8rem; border-radius: 12px; }
+    .stat-label { font-size: 0.7rem; }
+    .stat-num { font-size: 0.8rem; }
+    .stat-num .accent { font-size: 1.4rem; }
+    .stat-bar-track { height: 3px; }
+    .stat-pct { font-size: 0.65rem; }
+
+    /* Toolbar — stack back+export on row 1, filters on row 2 */
+    .results-toolbar {
+      padding: 0.3rem 0.8rem;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+    .btn-back {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.75rem;
+      min-height: 34px;
+    }
+    .share-btn {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.72rem;
+      min-height: 34px;
+      gap: 0.2rem;
+    }
+    .filter-tabs {
+      gap: 0.3rem;
+      order: 3;
+      flex-basis: 100%;
+    }
+    .filter-tab {
+      padding: 0.4rem 0.3rem;
+      font-size: 0.72rem;
+      border-radius: 8px;
+    }
+
+    /* Search + Sort */
+    .search-sort-row {
+      padding: 0 0.8rem;
+      gap: 0.4rem;
+      flex-direction: column;
+    }
+    .search-box {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.8rem;
+      border-radius: 10px;
+    }
+    .sort-select {
+      padding: 0.5rem 0.6rem;
+      font-size: 0.75rem;
+      border-radius: 10px;
+    }
+
+    /* Results title */
+    .results-title { padding: 0 0.8rem; font-size: 1rem; }
+    .results-container { padding: 0 0.8rem; }
+
+    /* Song rows */
+    .song-list { gap: 0.4rem; }
+    .song-row {
+      padding: 0.6rem 0.7rem;
+      gap: 0.5rem;
+      border-radius: 10px;
+      min-height: 48px;
+    }
+    .song-rank { font-size: 0.7rem; min-width: 24px; }
+    .song-name { font-size: 0.82rem; }
+    .song-count { font-size: 1rem; min-width: 32px; }
+    .song-toggle { font-size: 0.65rem; min-width: 14px; }
+    .song-row.opened { border-radius: 10px 10px 0 0; }
+    .song-detail {
+      padding: 0 0.7rem 0.6rem;
+      border-radius: 0 0 10px 10px;
+    }
+    .detail-title { font-size: 0.68rem; margin-bottom: 0.3rem; }
+    .detail-tag {
+      font-size: 0.65rem;
+      padding: 0.18rem 0.45rem;
+      border-radius: 5px;
+    }
+
+    /* Footer */
+    .footer { padding: 1.5rem 0.8rem 2rem; font-size: 0.68rem; }
+    .footer p { line-height: 1.6; }
+
+    /* Export overlay on mobile */
+    .export-overlay-content { padding: 1.5rem 2rem; border-radius: 14px; }
+    .export-spinner { width: 32px; height: 32px; }
+  }
+
+  /* Responsive — Small mobile */
+  @media (max-width: 380px) {
+    .header h1 { font-size: 0.98rem; }
+    .header .sub { font-size: 0.65rem; }
+    .lang-toggle button { padding: 0.2rem 0.4rem; font-size: 0.68rem; }
+    .lang-toggle .flag { font-size: 0.82rem; }
+    .stats-cards { gap: 0.35rem; padding: 0.5rem 0.6rem 0.25rem; }
+    .stat-card { padding: 0.6rem 0.6rem; }
+    .stat-label { font-size: 0.65rem; }
+    .stat-num .accent { font-size: 1.2rem; }
+    .song-name { font-size: 0.78rem; }
+    .select-group-title { font-size: 0.78rem; }
+    .select-perf-label { font-size: 0.72rem; }
+  }
+
+  /* Landscape phone */
+  @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+    .header { padding: 0.8rem 1rem 0.7rem; }
+    .header .logo-icon { font-size: 1.4rem; margin-bottom: 0.1rem; }
+    .header h1 { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="lang-toggle" id="langToggle">
+    <button data-lang="ja" class="active"><span class="flag">🇯🇵</span> 日本語</button>
+    <button data-lang="zh"><span class="flag">🇨🇳</span> 中文</button>
+  </div>
+  <span class="logo-icon">🪷</span>
+  <h1 data-i18n="title">蓮ノ空 楽曲回収チェッカー</h1>
+  <div class="sub" data-i18n="subtitle">Hasunosora Live Music Checker</div>
+</div>
+
+<!-- ========================== PAGE: SELECTION ========================== -->
+<div class="page active" id="pageSelect">
+  <div class="select-container">
+    <div class="select-header">
+      <h2 data-i18n="selectTitle">参加したLIVEを選択してください</h2>
+      <p data-i18n="selectDesc">チェックを入れて「生成」ボタンを押すと、聴いた曲が自動集計されます</p>
+    </div>
+    <div class="select-controls">
+      <button class="btn" onclick="selectAllLives()" data-i18n="selectAll">すべて選択</button>
+      <button class="btn" onclick="deselectAllLives()" data-i18n="deselectAll">すべて解除</button>
+    </div>
+<!-- 用户ID输入框 -->
+<div class="user-id-section" style="margin-top: 0.8rem;">
+  <input type="text" id="userIdInput" placeholder="输入你的ID（非必填）" 
+         style="padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); 
+                background: var(--card-bg); color: var(--text); font-size: 0.85rem; width: 100%; max-width: 300px;"
+         data-i18n-placeholder="userIdPlaceholder">
+</div>
+    <div id="selectList"></div>
+    <div class="generate-wrap">
+      <div class="selected-count" id="selectedCount"></div>
+      <button class="btn primary" id="btnGenerate" onclick="goToResults()" disabled data-i18n="generate">生成する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== PAGE: RESULTS ========================== -->
+<div class="page" id="pageResults">
+  <div class="results-page-bg">
+    <!-- 统计卡片 -->
+    <div class="stats-cards" id="statsCards">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-label" data-i18n="statsPerformances">参加公演</div>
+          <div class="stat-num"><span class="accent" id="statPerfNum">0</span>/<span id="statPerfTotal">0</span></div>
+        </div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" id="statPerfBar" style="width:0%"></div></div>
+        <div class="stat-pct" id="statPerfPct">0%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-label" data-i18n="statsSongs">回収楽曲</div>
+          <div class="stat-num"><span class="accent" id="statSongNum">0</span>/<span id="statSongTotal">0</span></div>
+        </div>
+        <div class="stat-bar-track"><div class="stat-bar-fill" id="statSongBar" style="width:0%"></div></div>
+        <div class="stat-pct" id="statSongPct">0%</div>
+      </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="results-toolbar">
+      <button class="btn-back" onclick="backToSelect()" data-i18n="back">← 戻る</button>
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all" onclick="setFilter('all')" data-i18n="filterAll">全て</button>
+        <button class="filter-tab" data-filter="collected" onclick="setFilter('collected')" data-i18n="filterCollected">回収済</button>
+        <button class="filter-tab" data-filter="missing" onclick="setFilter('missing')" data-i18n="filterMissing">未回収</button>
+      </div>
+      <button class="share-btn" id="btnExport" onclick="exportImage()">
+        <span>📷</span><span data-i18n="exportImage">画像保存</span>
+      </button>
+    </div>
+
+    <!-- 搜索和排序 -->
+    <div class="search-sort-row">
+      <input type="text" class="search-box" id="searchInput" data-i18n-placeholder="search" oninput="renderResults()">
+      <select class="sort-select" id="sortSelect" onchange="renderResults()">
+        <option value="freq" data-i18n="sortFreq">頻度順</option>
+        <option value="alpha" data-i18n="sortAlpha">五十音順</option>
+        <option value="release" data-i18n="sortRelease">リリース順</option>
+      </select>
+    </div>
+
+    <!-- 结果标题 -->
+    <div class="results-title" data-i18n="resultsTitle">集計結果</div>
+
+    <!-- 歌曲列表 -->
+    <div class="results-container" id="resultsContainer"></div>
+  </div>
+</div>
+
+<!-- AI生成免责声明 -->
+<div style="max-width: 900px; margin: 0 auto; padding: 0 1.5rem;">
+  <div style="margin-top: 1rem; padding: 0.8rem; background: var(--card-bg); border-radius: 8px; font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+    <p><strong data-i18n="disclaimerTitle">⚠️ 免责声明</strong></p>
+    <p data-i18n="disclaimerText">本页面由AI自动生成，数据来源于ll-fans.jp等公开网站。虽然已尽力确保准确性，但可能存在错误或遗漏。</p>
+    <p data-i18n="disclaimerUsage">本页面仅供个人学习参考使用，不得用于商业用途。如有侵权请联系删除。</p>
+    <p data-i18n="disclaimerUpdate">数据更新时间：2026年7月31日</p>
+  </div>
+</div>
+
+<div class="footer">
+  <p><span data-i18n="footerData">データ提供：</span><a href="https://ll-fans.jp/data/event" target="_blank">LL-Fans</a> · <a href="https://zh.moegirl.org.cn/" target="_blank">萌娘百科</a> · <a href="https://llwiki.org/" target="_blank">LLWiki</a></p>
+  <p style="margin-top:0.3rem" data-i18n="footerUnofficial">蓮ノ空女学院スクールアイドルクラブ 非公式ファンサイト · </p>
+  <p style="margin-top:0.3rem;color:var(--cherry);font-weight:600" data-i18n="footerAuthor">作者：绯幻乱漫</p>
+  <p style="margin-top:0.5rem;font-size:0.7rem;">
+    QQ: <a href="https://wpa.qq.com/msgrd?v=3&uin=908283643&site=qq&menu=yes" target="_blank" style="color:var(--cherry)">908283643</a> · 
+    X: <a href="https://x.com/FeiHuanLuanMan" target="_blank" style="color:var(--cherry)">@FeiHuanLuanMan</a>
+  </p>
+</div>
+
+<script>
+// ============================================================
+// i18n
+// ============================================================
+const I18N = {
+  ja: {
+    title: "蓮ノ空 楽曲回収チェッカー",
+    subtitle: "Hasunosora Live Music Checker",
+    statsPerformances: "参戦済ライブ",
+    statsSongs: "回収楽曲",
+    selectTitle: "参加したLIVEを選択してください",
+    selectDesc: "チェックを入れて「生成」ボタンを押すと、聴いた曲が自動集計されます",
+    selectAll: "すべて選択",
+    deselectAll: "すべて解除",
+    generate: "生成する",
+    selectedCount: "{n} / {total} 公演を選択中",
+    back: "← 戻る",
+    search: "曲名で検索…",
+    noMatch: "該当する曲が見つかりません",
+    sortFreq: "頻度順",
+    sortAlpha: "五十音順",
+    sortRelease: "リリース順",
+    filterAll: "全て",
+    filterCollected: "回収済",
+    filterMissing: "未回収",
+    resultsTitle: "集計結果",
+
+    userIdPlaceholder: "IDを入力（任意）",
+    exportImage: "画像保存",
+    exportLoading: "画像生成中…",
+    exportSuccess: "画像を保存しました",
+    exportShare: "シェア",
+    footerData: "データ提供：",
+    footerUnofficial: "蓮ノ空女学院スクールアイドルクラブ 非公式ファンサイト · ",
+    footerAuthor: "作者：绯幻乱漫",
+    songUnit: "回",
+    allLives: "全曲",
+    disclaimerTitle: "⚠️ 免責事項",
+    disclaimerText: "このページはAIによって自動生成されました。データはll-fans.jpなどの公開サイトから取得しています。正確性には最大限の注意を払っていますが、誤りや遗漏がある可能性があります。",
+    disclaimerUsage: "このページは個人的な学習・参考のみを目的としており、商業利用は禁止されています。著作権侵害と思われる場合はご連絡ください。",
+    disclaimerUpdate: "データ更新日：2026年7月31日",
+  },
+  zh: {
+    title: "莲之空 乐曲回收检查器",
+    subtitle: "Hasunosora Live Music Checker",
+    statsPerformances: "参战LIVE",
+    statsSongs: "回收乐曲",
+    selectTitle: "请选择您参加过的 LIVE",
+    selectDesc: "勾选后点击「生成」按钮，自动统计您听过的歌曲",
+    selectAll: "全选",
+    deselectAll: "取消全选",
+    generate: "生成",
+    selectedCount: "已选 {n} / {total} 场",
+    back: "← 返回",
+    search: "搜索歌曲名…",
+    noMatch: "未找到匹配的歌曲",
+    sortFreq: "按频次",
+    sortAlpha: "按假名",
+    sortRelease: "按发布顺序",
+    filterAll: "全部",
+    filterCollected: "已回收",
+    filterMissing: "未回收",
+    resultsTitle: "统计结果",
+
+    userIdPlaceholder: "输入你的ID（非必填）",
+    exportImage: "保存图片",
+    exportLoading: "正在生成图片…",
+    exportSuccess: "图片已保存",
+    exportShare: "分享",
+    footerData: "数据来源：",
+    footerUnofficial: "莲之空女学院学园偶像俱乐部 非官方粉丝站 · ",
+    footerAuthor: "作者：绯幻乱漫",
+    songUnit: "次",
+    allLives: "全曲",
+    disclaimerTitle: "⚠️ 免责声明",
+    disclaimerText: "本页面由AI自动生成，数据来源于ll-fans.jp等公开网站。虽然已尽力确保准确性，但可能存在错误或遗漏。",
+    disclaimerUsage: "本页面仅供个人学习参考使用，不得用于商业用途。如有侵权请联系删除。",
+    disclaimerUpdate: "数据更新时间：2026年7月31日",
+  }
+};
+
+let currentLang = 'ja';
+let currentFilter = 'all';
+
+function detectLang() {
+  const saved = localStorage.getItem('hasunosora-lang');
+  if (saved === 'ja' || saved === 'zh') return saved;
+  const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+  return nav.startsWith('zh') ? 'zh' : 'ja';
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('hasunosora-lang', lang);
+  document.querySelectorAll('.lang-toggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (I18N[lang][key]) el.textContent = I18N[lang][key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (I18N[lang][key]) el.placeholder = I18N[lang][key];
+  });
+  // Update sort select options
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+    sortSelect.querySelectorAll('option').forEach(opt => {
+      const key = opt.dataset.i18n;
+      if (key && I18N[lang][key]) opt.textContent = I18N[lang][key];
+    });
+  }
+  document.title = I18N[lang].title + " — Hasunosora Music Checker";
+  if (document.getElementById('pageSelect').classList.contains('active')) {
+    renderSelect();
+  } else {
+    renderResults();
+  }
+}
+
+function setFilter(mode) {
+  currentFilter = mode;
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.filter === mode);
+  });
+  renderResults();
+}
+
+document.getElementById('langToggle').addEventListener('click', function(e) {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  setLang(btn.dataset.lang);
+});
+
+// ============================================================
+// DATA
+// ============================================================
+const liveData = [
+  {
+    "id": "bloom-the-dream",
+    "year": 2023,
+    "title": "OPENING LIVE EVENT ～Bloom the Dream～",
+    "date": "2023.06.04",
+    "venue": "立川ステージガーデン",
+    "sets": [
+      {
+        "label": "昼公演",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "フォーチュンムービー",
+            "note": "初"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "ツキマカセ",
+            "note": "初"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード",
+            "note": "初"
+          },
+          {
+            "ja": "希望的プリズム",
+            "note": "初"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "初"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "Reflection in the mirror",
+            "note": "初"
+          },
+          {
+            "ja": "Mix shake!!",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "夜公演",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "フォーチュンムービー"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "ツキマカセ"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "希望的プリズム"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "1st-live-tour",
+    "year": 2023,
+    "title": "1st Live Tour ～RUN！CAN！FUN！～",
+    "date": "2023.10-11",
+    "venue": "福岡 / 東京 / 愛知",
+    "sets": [
+      {
+        "label": "福岡 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!",
+            "note": "初"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "初"
+          },
+          {
+            "ja": "残陽",
+            "note": "初"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "明日の空の僕たちへ",
+            "note": "初"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Legato",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "福岡 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "パラレルダンサー",
+            "note": "初"
+          },
+          {
+            "ja": "Dear my future",
+            "note": "初"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "東京 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "残陽"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "ジブンダイアリー",
+            "note": "初"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Kawaii no susume",
+            "note": "初"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "東京 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "残陽"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "ジブンダイアリー"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Kawaii no susume"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "愛知 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "残陽"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "ジブンダイアリー"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Kawaii no susume"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "愛知 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Yup! Yup! Yup!"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "残陽"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "ジブンダイアリー"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Kawaii no susume"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2nd-live-tour",
+    "year": 2024,
+    "title": "2nd Live Tour ～Blooming with ○○○～",
+    "date": "2024.04-05",
+    "venue": "千葉 / 兵庫",
+    "sets": [
+      {
+        "label": "千葉 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "初"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Link to the FUTURE"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "パラレルダンサー"
+          },
+          {
+            "ja": "Runway"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "シュガーメルト",
+            "note": "初"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "Pleasure Feather"
+          },
+          {
+            "ja": "ハッピー至上主義！"
+          },
+          {
+            "ja": "Dream Believers",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "千葉 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Trick ＆ Cute"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ツキマカセ"
+          },
+          {
+            "ja": "Link to the FUTURE"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "飴色",
+            "note": "初"
+          },
+          {
+            "ja": "Runway"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "天才なのかもしれない",
+            "note": "初"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "Dear my future"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "Pleasure Feather"
+          },
+          {
+            "ja": "ハッピー至上主義！"
+          },
+          {
+            "ja": "Dream Believers",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "STEP UP !"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.1",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "BANG YOU グラビティ",
+            "note": "初"
+          },
+          {
+            "ja": "希望的プリズム"
+          },
+          {
+            "ja": "Link to the FUTURE"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "Runway"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "シュガーメルト"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "Dream Believers",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "365 Days",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.2",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "夏めきペイン"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ"
+          },
+          {
+            "ja": "フォーチュンムービー"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "パラレルダンサー"
+          },
+          {
+            "ja": "Link to the FUTURE"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "飴色"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "天才なのかもしれない"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "Legato"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "明日の空の僕たちへ"
+          },
+          {
+            "ja": "Dream Believers",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fes-rec-first-crossing",
+    "year": 2024,
+    "title": "103期 Fes×ReC:LIVE ～first crossing～",
+    "date": "2024.09.12-13",
+    "venue": "Zepp Osaka Bayside",
+    "sets": [
+      {
+        "label": "Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 13:00",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 16:00",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 19:00",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mirakura-radio",
+    "year": 2024,
+    "title": "みらくらぱーく！ラジオ公開録音 ～夏の大補習まつり～",
+    "date": "2024.08.23-24",
+    "venue": "...",
+    "sets": [
+      {
+        "label": "8月23日",
+        "songs": [
+          {
+            "ja": "マハラジャンボリー",
+            "note": "初"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期スリーズブーケ & みらくらぱーく！ Ver."
+          }
+        ]
+      },
+      {
+        "label": "8月24日＜昼公演＞",
+        "songs": [
+          {
+            "ja": "BANG YOU グラビティ"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期DOLLCHESTRA & みらくらぱーく！ Ver."
+          }
+        ]
+      },
+      {
+        "label": "8月24日＜夜公演＞",
+        "songs": [
+          {
+            "ja": "マハラジャンボリー"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "みらくりえーしょん"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "3rd-live-tour",
+    "year": 2024,
+    "title": "3rd Live Tour TRY TRI UNITY!!!",
+    "date": "2024.11-2025.01",
+    "venue": "立川 / 大阪 / 愛知 / 横滨",
+    "sets": [
+      {
+        "label": "with MiraCra 昼公演",
+        "songs": [
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "BANG YOU グラビティ"
+          },
+          {
+            "ja": "マハラジャンボリー"
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "天才なのかもしれない",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ジョーショーキリュー",
+            "note": "初"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "104期みらくらぱーく！ Ver."
+          }
+        ]
+      },
+      {
+        "label": "with MiraCra 夜公演",
+        "songs": [
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "マハラジャンボリー"
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "104期みらくらぱーく！ Ver."
+          }
+        ]
+      },
+      {
+        "label": "with DCS 昼公演",
+        "songs": [
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "希望的プリズム"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Mirage Voyage",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "Tragic Drops",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "バアドケージ",
+            "note": "初"
+          },
+          {
+            "ja": "365 Days",
+            "note": "104期DOLLCHESTRA Ver."
+          }
+        ]
+      },
+      {
+        "label": "with DCS 夜公演",
+        "songs": [
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "AWOKE"
+          },
+          {
+            "ja": "スケイプゴート"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Mirage Voyage",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "Tragic Drops",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "365 Days",
+            "note": "104期DOLLCHESTRA Ver."
+          }
+        ]
+      },
+      {
+        "label": "with CB 昼公演",
+        "songs": [
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "謳歌爛漫"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "千変万華",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Mix shake!!",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハナムスビ",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期スリーズブーケ Ver."
+          }
+        ]
+      },
+      {
+        "label": "with CB 夜公演",
+        "songs": [
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "水彩世界"
+          },
+          {
+            "ja": "残陽"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "千変万華",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期スリーズブーケ Ver."
+          }
+        ]
+      },
+      {
+        "label": "TRI TRI Day.1",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!",
+            "note": "初"
+          },
+          {
+            "ja": "On your mark",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "天才なのかもしれない",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Mix shake!!",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "パラレルダンサー",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "Tragic Drops",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Now or Never"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "104期Ver. 歌唱中に早着替え"
+          },
+          {
+            "ja": "KEY of Like！",
+            "note": "初"
+          },
+          {
+            "ja": "Edelied",
+            "note": "初"
+          },
+          {
+            "ja": "AURORA FLOWER",
+            "note": "初"
+          }
+        ]
+      },
+      {
+        "label": "TRI TRI Day.2",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!"
+          },
+          {
+            "ja": "On your mark",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期Ver."
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "Reflection in the mirror",
+            "note": "104期NEW Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハクチューアラモード",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Kawaii no susume",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "千変万華",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "Mirage Voyage",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Now or Never"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "104期Ver. 歌唱中に早着替え"
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fmt-try-try",
+    "year": 2024,
+    "title": "Live & Fan Meeting TRY TRY UNITY!!!",
+    "date": "2024.12.21-22",
+    "venue": "両国国技館",
+    "sets": [
+      {
+        "label": "Day.1",
+        "songs": [
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハッピー至上主義！"
+          },
+          {
+            "ja": "Pleasure Feather"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "恥は人生のかきすて",
+            "note": "初"
+          },
+          {
+            "ja": "365 Days"
+          }
+        ]
+      },
+      {
+        "label": "Day.2",
+        "songs": [
+          {
+            "ja": "アオクハルカ"
+          },
+          {
+            "ja": "月夜見海月"
+          },
+          {
+            "ja": "Mix shake!!",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "みらくりえーしょん"
+          },
+          {
+            "ja": "ファンファーレ！！！"
+          },
+          {
+            "ja": "天才なのかもしれない",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "レディバグ"
+          },
+          {
+            "ja": "Proof"
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハッピー至上主義！"
+          },
+          {
+            "ja": "Pleasure Feather"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "365 Days"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fes-rec-osaka",
+    "year": 2025,
+    "title": "103期 Fes×ReC:LIVE ～first crossing～ 追加公演",
+    "date": "2025.01.23-24",
+    "venue": "Zepp Osaka Bayside",
+    "sets": [
+      {
+        "label": "Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 13:00",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ミルク"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 16:00",
+        "songs": [
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "青とシャボン"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      },
+      {
+        "label": "Day.2 19:00",
+        "songs": [
+          {
+            "ja": "On your mark"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "Special Thanks"
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "ド！ド！ド！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "DEEPNESS"
+          },
+          {
+            "ja": "永遠のEuphoria"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "4th-live-dream",
+    "year": 2025,
+    "title": "4th Live Dream ～Bloom, The Dream Believers～",
+    "date": "2025.04-06",
+    "venue": "石川 / 兵庫 / 神奈川",
+    "sets": [
+      {
+        "label": "石川 Day.1",
+        "songs": [
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "ゲッカビジン",
+            "note": "初"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "レム",
+            "note": "初"
+          },
+          {
+            "ja": "ツキマカセ",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "かくれんぼしよう",
+            "note": "初"
+          },
+          {
+            "ja": "マハラジャンボリー",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "Chu! Chocolate",
+            "note": "初"
+          },
+          {
+            "ja": "シュガーメルト",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "いったん",
+            "note": "初"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "おいでよ！石川大観光",
+            "note": "初"
+          },
+          {
+            "ja": "マハラジャンボリーⅡ",
+            "note": "初"
+          },
+          {
+            "ja": "恋景色昭和ロマン",
+            "note": "初"
+          },
+          {
+            "ja": "ベジ・ラブ・ルー",
+            "note": "初"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Love it! Wonderful Trip!",
+            "note": "初"
+          },
+          {
+            "ja": "アステリズム",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "石川 Day.2",
+        "songs": [
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "ゲッカビジン"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "レム"
+          },
+          {
+            "ja": "パラレルダンサー",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "かくれんぼしよう"
+          },
+          {
+            "ja": "ハクチューアラモード",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "Chu! Chocolate"
+          },
+          {
+            "ja": "素顔のピクセル",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "いったん"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "おいでよ！石川大観光"
+          },
+          {
+            "ja": "マハラジャンボリーⅡ"
+          },
+          {
+            "ja": "恋景色昭和ロマン"
+          },
+          {
+            "ja": "ベジ・ラブ・ルー"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Love it! Wonderful Trip!"
+          },
+          {
+            "ja": "アステリズム"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.1",
+        "songs": [
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "Now or Never"
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "ゲッカビジン"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "レム"
+          },
+          {
+            "ja": "ジブンダイアリー",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "かくれんぼしよう"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "Chu! Chocolate"
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "いったん"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "Yup! Yup! Yup!",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "マハラジャンボリーⅡ"
+          },
+          {
+            "ja": "恋景色昭和ロマン"
+          },
+          {
+            "ja": "ベジ・ラブ・ルー"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Love it! Wonderful Trip!"
+          },
+          {
+            "ja": "アステリズム"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.2",
+        "songs": [
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "Now or Never"
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "ゲッカビジン"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "レム"
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "かくれんぼしよう"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "Chu! Chocolate"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "いったん"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "Yup! Yup! Yup!",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "マハラジャンボリーⅡ"
+          },
+          {
+            "ja": "恋景色昭和ロマン"
+          },
+          {
+            "ja": "ベジ・ラブ・ルー"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Love it! Wonderful Trip!"
+          },
+          {
+            "ja": "アステリズム"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.1",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!"
+          },
+          {
+            "ja": "Now or Never"
+          },
+          {
+            "ja": "飴色"
+          },
+          {
+            "ja": "レム"
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "BANG YOU グラビティ"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "フォーチュンムービー"
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "幸せのリボン",
+            "note": "初"
+          },
+          {
+            "ja": "やっぱ天使！",
+            "note": "初"
+          },
+          {
+            "ja": "be proud",
+            "note": "初"
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "アステリズム"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "Legato",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.2",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!"
+          },
+          {
+            "ja": "ゲッカビジン"
+          },
+          {
+            "ja": "飴色"
+          },
+          {
+            "ja": "KNOT",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "バアドケージ"
+          },
+          {
+            "ja": "BANG YOU グラビティ"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ジョーショーキリュー"
+          },
+          {
+            "ja": "フォーチュンムービー"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "水彩世界",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "ハナムスビ"
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "幸せのリボン"
+          },
+          {
+            "ja": "やっぱ天使！"
+          },
+          {
+            "ja": "be proud"
+          },
+          {
+            "ja": "いつでも、いつまでも"
+          },
+          {
+            "ja": "365 Days"
+          },
+          {
+            "ja": "抱きしめる花びら"
+          },
+          {
+            "ja": "アステリズム"
+          },
+          {
+            "ja": "ツバサ・ラ・リベルテ",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "KEY of Like！"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "明日の空の僕たちへ",
+            "note": "104期 Ver."
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "5th-live-tour",
+    "year": 2025,
+    "title": "5th Live Tour ～4Pair Power Spread!!!!～",
+    "date": "2025.10-12",
+    "venue": "東京 / 愛知 / 大阪 / 神奈川",
+    "sets": [
+      {
+        "label": "東京 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "以心☆電信"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "マハラジャンボリーⅡ"
+          },
+          {
+            "ja": "ニャオシグニャル",
+            "note": "初"
+          },
+          {
+            "ja": "天才なのかもしれない",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ハートにQ",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！",
+            "note": "初"
+          },
+          {
+            "ja": "Hello, new dream!",
+            "note": "初"
+          }
+        ]
+      },
+      {
+        "label": "東京 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "みらくりえーしょん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "以心☆電信"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "マハラジャンボリーⅡ"
+          },
+          {
+            "ja": "ニャオシグニャル"
+          },
+          {
+            "ja": "ファンファーレ！！！",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ハートにQ"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "愛知 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "AWOKE",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "ツキマカセ"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "Proof",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "105期 Ver. (アレンジ: 104期NEW Ver.)"
+          },
+          {
+            "ja": "diamondz",
+            "note": "初"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Runway"
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "ちょ、尊いLOVE",
+            "note": "初"
+          },
+          {
+            "ja": "平成ギャルズ!!!!",
+            "note": "初"
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "愛知 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "青春の輪郭"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "レディバグ",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Tragic Drops"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "ツキマカセ"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "Take It Over",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Sparkly Spot",
+            "note": "105期 Ver. (アレンジ: 104期NEW Ver.)"
+          },
+          {
+            "ja": "diamondz"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Runway"
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "ちょ、尊いLOVE"
+          },
+          {
+            "ja": "平成ギャルズ!!!!"
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "大阪 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様",
+            "note": "初"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "AURORA FLOWER"
+          },
+          {
+            "ja": "天地黎明",
+            "note": "初"
+          },
+          {
+            "ja": "ドライブ・スペード・クレイジー",
+            "note": "初"
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "105期・ショート Ver. (アレンジ: 103期 Ver.)"
+          },
+          {
+            "ja": "レディバグ",
+            "note": "105期・ショート Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "105期・ショート Ver."
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Trick ＆ Cute",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Nεw Black",
+            "note": "初"
+          },
+          {
+            "ja": "IcHiGo milK love",
+            "note": "初"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "大阪 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Edelied"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "ゲッカビジン"
+          },
+          {
+            "ja": "チリコンカン",
+            "note": "初"
+          },
+          {
+            "ja": "ドライブ・スペード・クレイジー"
+          },
+          {
+            "ja": "アイデンティティ",
+            "note": "105期・ショート Ver. (アレンジ: 103期 Ver.)"
+          },
+          {
+            "ja": "レディバグ",
+            "note": "105期・ショート Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "105期・ショート Ver."
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Trick ＆ Cute",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Nεw Black"
+          },
+          {
+            "ja": "IcHiGo milK love"
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "水彩世界",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "シュガーメルト"
+          },
+          {
+            "ja": "乙女詞華集",
+            "note": "初"
+          },
+          {
+            "ja": "月夜見海月",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "My Lucky Clover",
+            "note": "初"
+          },
+          {
+            "ja": "一生に夢が咲くように"
+          },
+          {
+            "ja": "チャーミングな花束を！",
+            "note": "初"
+          },
+          {
+            "ja": "平成ギャルズ!!!!"
+          },
+          {
+            "ja": "ちょ、尊いLOVE"
+          },
+          {
+            "ja": "Nεw Black"
+          },
+          {
+            "ja": "IcHiGo milK love"
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "37.5℃のファンタジー"
+          },
+          {
+            "ja": "アオクハルカ",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "アイマイメーデー"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "夏めきペイン",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Mix shake!!"
+          },
+          {
+            "ja": "素顔のピクセル"
+          },
+          {
+            "ja": "シュガーメルト"
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "謳歌爛漫",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "My Lucky Clover"
+          },
+          {
+            "ja": "一生に夢が咲くように"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "平成ギャルズ!!!!"
+          },
+          {
+            "ja": "ちょ、尊いLOVE"
+          },
+          {
+            "ja": "Nεw Black"
+          },
+          {
+            "ja": "IcHiGo milK love"
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "とーひょー☆スター！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fes-rec-road-to-bloom",
+    "year": 2026,
+    "title": "103-105th Fes×ReC:LIVE ～Road to Bloom～",
+    "date": "2026.01.21-22",
+    "venue": "Zepp Haneda (TOKYO)",
+    "sets": [
+      {
+        "label": "Day.1＜第1回公演＞",
+        "songs": [
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "KNOT"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "千変万華"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "十六夜セレーネ"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "ちょ、尊いLOVE"
+          },
+          {
+            "ja": "Echoes Beyond",
+            "note": "初"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "Day.2＜第2回公演＞",
+        "songs": [
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "眩耀夜行"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "可惜夜花火"
+          },
+          {
+            "ja": "Mirage Voyage"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "ブルウモーメント"
+          },
+          {
+            "ja": "ハクチューアラモード"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "Very! Very! COCO夏っ"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "ハッピー至上主義！"
+          },
+          {
+            "ja": "Nεw Black"
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "Day.2＜第3回公演＞",
+        "songs": [
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "Take It Over"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "Holiday∞Holiday"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "ココン東西"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "ニャオシグニャル"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "Pleasure Feather"
+          },
+          {
+            "ja": "ちょ、尊いLOVE"
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      },
+      {
+        "label": "Day.2＜第4回公演＞",
+        "songs": [
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "Reflection in the mirror"
+          },
+          {
+            "ja": "Sparkly Spot"
+          },
+          {
+            "ja": "アイデンティティ"
+          },
+          {
+            "ja": "Colorfulness"
+          },
+          {
+            "ja": "ユメワズライ"
+          },
+          {
+            "ja": "COMPASS"
+          },
+          {
+            "ja": "全方位キュン♡"
+          },
+          {
+            "ja": "Celebration!"
+          },
+          {
+            "ja": "アンペア"
+          },
+          {
+            "ja": "WAWO!"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "Nεw Black"
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "Dream Believers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "6th-live-dream",
+    "year": 2026,
+    "title": "6th Live Dream ～Bloom Garden Party～",
+    "date": "2026.05-07",
+    "venue": "福岡 / 兵庫 / 神奈川 / 埼玉",
+    "sets": [
+      {
+        "label": "福岡 Day.1",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Yup! Yup! Yup!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure",
+            "note": "初"
+          },
+          {
+            "ja": "素顔のピクセル",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！",
+            "note": "初"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "金沢片恋慕",
+            "note": "初"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "アンブレラ",
+            "note": "初"
+          },
+          {
+            "ja": "リブウト",
+            "note": "初"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "センパイ",
+            "note": "初"
+          },
+          {
+            "ja": "Hip, hip, hooray!",
+            "note": "初"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "ミアモーレ・ミーアキャット",
+            "note": "初"
+          },
+          {
+            "ja": "A出るノート",
+            "note": "初"
+          },
+          {
+            "ja": "JOKER.",
+            "note": "初"
+          },
+          {
+            "ja": "ペレニアル",
+            "note": "初"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          }
+        ]
+      },
+      {
+        "label": "福岡 Day.2",
+        "songs": [
+          {
+            "ja": "Dream Believers",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Yup! Yup! Yup!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！"
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure"
+          },
+          {
+            "ja": "素顔のピクセル",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "以心☆電信",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "My Lucky Clover"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "diamondz"
+          },
+          {
+            "ja": "リブウト"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "ハートにQ"
+          },
+          {
+            "ja": "Hip, hip, hooray!"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "ドライブ・スペード・クレイジー"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "JOKER."
+          },
+          {
+            "ja": "ペレニアル"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "永遠のEuphoria",
+            "note": "105期 Ver."
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.1",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "JOKER."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "Take It Over",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure"
+          },
+          {
+            "ja": "アオクハルカ",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "金沢片恋慕"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "アンブレラ"
+          },
+          {
+            "ja": "リブウト"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "センパイ"
+          },
+          {
+            "ja": "Hip, hip, hooray!"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "ミアモーレ・ミーアキャット"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "ペレニアル"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "105期 Ver.｜スリーズブーケ & DOLLCHESTRA & みらくらぱーく！ & Edel Note"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "365 Days",
+            "note": "105期 Ver."
+          }
+        ]
+      },
+      {
+        "label": "兵庫 Day.2",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "JOKER."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！"
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure"
+          },
+          {
+            "ja": "アオクハルカ",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "ノンフィクションヒーローショー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "Take It Over",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "Berry Merry Go Round",
+            "note": "初"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "フリジア",
+            "note": "初"
+          },
+          {
+            "ja": "リブウト"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "PANAI☆",
+            "note": "初"
+          },
+          {
+            "ja": "Hip, hip, hooray!"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "咲かnow!",
+            "note": "初"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "ペレニアル"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "105期 Ver.｜スリーズブーケ & DOLLCHESTRA & みらくらぱーく！ & Edel Note"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "365 Days",
+            "note": "105期 Ver."
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.1",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "JOKER."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "KNOT",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "105期 Ver.｜楡井希実さん、野中ここなさん、櫻井陽菜さん、葉山風花さん、三宅美羽さん、進藤あまねさんがバックダンサーとして出演"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "金沢片恋慕"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "アンブレラ"
+          },
+          {
+            "ja": "リブウト"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "PANAI☆"
+          },
+          {
+            "ja": "Hip, hip, hooray!"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "チリコンカン"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "105期 Ver.｜スリーズブーケ & DOLLCHESTRA & みらくらぱーく！ & Edel Note"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "神奈川 Day.2",
+        "songs": [
+          {
+            "ja": "Bloom the smile, Bloom the dream!",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "JOKER."
+          },
+          {
+            "ja": "On your mark",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "片翼のトリバガ"
+          },
+          {
+            "ja": "令嬢モブ！"
+          },
+          {
+            "ja": "乙女詞華集"
+          },
+          {
+            "ja": "Sayo-Shigure"
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "BLAST!!"
+          },
+          {
+            "ja": "バイタルサイン"
+          },
+          {
+            "ja": "ココン東西",
+            "note": "105期 Ver.｜楡井希実さん、野中ここなさん、櫻井陽菜さん、葉山風花さん、三宅美羽さん、進藤あまねさんがバックダンサーとして出演"
+          },
+          {
+            "ja": "太陽であれ！"
+          },
+          {
+            "ja": "ガランドFlash"
+          },
+          {
+            "ja": "KNOT",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "Berry Merry Go Round"
+          },
+          {
+            "ja": "フルーツパンチ"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "フリジア"
+          },
+          {
+            "ja": "リブウト"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "PANAI☆"
+          },
+          {
+            "ja": "Hip, hip, hooray!"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "咲かnow!"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "恥は人生のかきすて"
+          },
+          {
+            "ja": "Link to the FUTURE",
+            "note": "105期 Ver.｜スリーズブーケ & DOLLCHESTRA & みらくらぱーく！ & Edel Note"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "Hello, new dream!"
+          }
+        ]
+      },
+      {
+        "label": "埼玉 Day.1",
+        "songs": [
+          {
+            "ja": "ハナ咲けばユメ駆ける",
+            "note": "初"
+          },
+          {
+            "ja": "Retrofuture"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "水彩世界",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "眩耀夜行",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Special Thanks",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "青春の輪郭",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "パラレルダンサー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "センパイ"
+          },
+          {
+            "ja": "ジョーショーキリュー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "Bless you!",
+            "note": "初"
+          },
+          {
+            "ja": "ミジンコトランスフォーメーション",
+            "note": "初"
+          },
+          {
+            "ja": "プレイリスト/「あの日」",
+            "note": "初"
+          },
+          {
+            "ja": "ペレニアル"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "一生に夢が咲くように"
+          },
+          {
+            "ja": "雪舞う空と二秒の永遠"
+          },
+          {
+            "ja": "今、過去、未来の三原色"
+          },
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "光の中で花咲いて",
+            "note": "初"
+          }
+        ]
+      },
+      {
+        "label": "埼玉 Day.2",
+        "songs": [
+          {
+            "ja": "ハナ咲けばユメ駆ける"
+          },
+          {
+            "ja": "シアター生き様"
+          },
+          {
+            "ja": "フュージョンクラスト"
+          },
+          {
+            "ja": "A出るノート"
+          },
+          {
+            "ja": "水彩世界",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Holiday∞Holiday",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "Special Thanks",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "AWOKE",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "KNOT",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "パラレルダンサー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ド！ド！ド！",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ココン東西",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "ジョーショーキリュー",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "いったん",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "STEP UP !",
+            "note": "105期 Ver."
+          },
+          {
+            "ja": "アイドゥーミー！"
+          },
+          {
+            "ja": "はじまりの羽音"
+          },
+          {
+            "ja": "Echoes Beyond"
+          },
+          {
+            "ja": "チャーミングな花束を！"
+          },
+          {
+            "ja": "Bless you!"
+          },
+          {
+            "ja": "ミジンコトランスフォーメーション"
+          },
+          {
+            "ja": "プレイリスト/「あの日」"
+          },
+          {
+            "ja": "ペレニアル"
+          },
+          {
+            "ja": "EdelinieN"
+          },
+          {
+            "ja": "トモダチになれる場所"
+          },
+          {
+            "ja": "アイシイ"
+          },
+          {
+            "ja": "不思議と君とライブラリー"
+          },
+          {
+            "ja": "一生に夢が咲くように"
+          },
+          {
+            "ja": "雪舞う空と二秒の永遠"
+          },
+          {
+            "ja": "今、過去、未来の三原色"
+          },
+          {
+            "ja": "Dream Believers"
+          },
+          {
+            "ja": "光の中で花咲いて"
+          }
+        ]
+      }
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const SELECT_KEY = "hasunosora-selected-performances-v2";
+let selectedPerformances = new Set(); // Set of "liveId|setIdx"
+
+function loadState() {
+  try {
+    const sel = localStorage.getItem(SELECT_KEY);
+    if (sel) selectedPerformances = new Set(JSON.parse(sel));
+  } catch(e) { selectedPerformances = new Set(); }
+}
+
+function saveSelection() {
+  localStorage.setItem(SELECT_KEY, JSON.stringify([...selectedPerformances]));
+}
+
+function perfKey(liveId, setIdx) { return `${liveId}|${setIdx}`; }
+
+function toggleSelectPerformance(liveId, setIdx) {
+  const key = perfKey(liveId, setIdx);
+  if (selectedPerformances.has(key)) { selectedPerformances.delete(key); }
+  else { selectedPerformances.add(key); }
+  saveSelection();
+  renderSelect();
+}
+
+function toggleSelectLiveAll(liveId) {
+  const live = liveData.find(l => l.id === liveId);
+  if (!live) return;
+  const keys = live.sets.map((_, i) => perfKey(liveId, i));
+  const allSelected = keys.every(k => selectedPerformances.has(k));
+  if (allSelected) { keys.forEach(k => selectedPerformances.delete(k)); }
+  else { keys.forEach(k => selectedPerformances.add(k)); }
+  saveSelection();
+  renderSelect();
+}
+
+function selectAllLives() {
+  liveData.forEach(live => {
+    live.sets.forEach((_, setIdx) => selectedPerformances.add(perfKey(live.id, setIdx)));
+  });
+  saveSelection();
+  renderSelect();
+}
+
+function deselectAllLives() {
+  selectedPerformances.clear();
+  saveSelection();
+  renderSelect();
+}
+
+// ============================================================
+// PAGE: SELECTION
+// ============================================================
+function renderSelect() {
+  const container = document.getElementById('selectList');
+  const grouped = {};
+  liveData.forEach(live => {
+    if (!grouped[live.year]) grouped[live.year] = [];
+    grouped[live.year].push(live);
+  });
+  const years = Object.keys(grouped).sort((a,b) => a - b);
+  let html = '';
+  let totalPerformances = 0;
+  years.forEach(year => {
+    html += `<div class="select-year-section"><div class="select-year-label">${year}</div>`;
+    grouped[year].forEach(live => {
+      const liveKeys = live.sets.map((_, i) => perfKey(live.id, i));
+      const selCount = liveKeys.filter(k => selectedPerformances.has(k)).length;
+      const allSelected = liveKeys.every(k => selectedPerformances.has(k));
+      totalPerformances += live.sets.length;
+      html += `<div class="select-live-group">
+        <div class="select-live-group-header" onclick="toggleSelectLiveAll('${live.id}')">
+          <div class="select-checkbox mini${allSelected ? ' checked' : ''}">${allSelected ? '✓' : ''}</div>
+          <div class="select-group-info">
+            <div class="select-group-title">${escapeHtml(live.title)}</div>
+            <div class="select-meta">
+              <span>📅 ${escapeHtml(live.date)}</span>
+              <span>📍 ${escapeHtml(live.venue)}</span>
+            </div>
+          </div>
+          <div class="select-group-arrow">${allSelected ? '—' : '＋'}</div>
+        </div>
+        <div class="select-live-performances">`;
+      live.sets.forEach((set, setIdx) => {
+        const key = perfKey(live.id, setIdx);
+        const sel = selectedPerformances.has(key);
+        const songCount = set.songs.length;
+        html += `<div class="select-perf-card${sel ? ' selected' : ''}" onclick="event.stopPropagation();toggleSelectPerformance('${live.id}',${setIdx})">
+          <div class="select-checkbox">${sel ? '✓' : ''}</div>
+          <div class="select-perf-info">
+            <span class="select-perf-label">${escapeHtml(set.label)}</span>
+            ${songCount > 0 ? `<span class="select-perf-count">${songCount} 曲</span>` : `<span class="select-perf-count empty">—</span>`}
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  const n = selectedPerformances.size;
+  document.getElementById('selectedCount').textContent =
+    I18N[currentLang].selectedCount.replace('{n}', n).replace('{total}', totalPerformances);
+  document.getElementById('btnGenerate').disabled = n === 0;
+}
+
+// ============================================================
+// PAGE: RESULTS — Frequency analysis
+// ============================================================
+function buildSongFreq() {
+  const freq = new Map();
+  liveData.forEach(live => {
+    live.sets.forEach((set, setIdx) => {
+      if (!selectedPerformances.has(perfKey(live.id, setIdx))) return;
+      if (set.songs.length === 0) return;
+      const seenInSet = new Set();
+      set.songs.forEach(song => {
+        const name = song.ja;
+        if (seenInSet.has(name)) return;
+        seenInSet.add(name);
+        if (!freq.has(name)) freq.set(name, { count: 0, lives: [] });
+        const entry = freq.get(name);
+        entry.count++;
+        entry.lives.push({ title: live.title, label: set.label, date: live.date });
+      });
+    });
+  });
+  return freq;
+}
+
+// Get all unique songs from all live data (global library)
+function buildAllSongs() {
+  const allSongs = new Map();
+  liveData.forEach(live => {
+    live.sets.forEach(set => {
+      set.songs.forEach(song => {
+        if (!allSongs.has(song.ja)) {
+          allSongs.set(song.ja, { firstDate: live.date, firstLive: live.title });
+        }
+      });
+    });
+  });
+  return allSongs;
+}
+
+function getSearchTerm() {
+  return (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+}
+
+function getSortMode() {
+  return document.getElementById('sortSelect')?.value || 'freq';
+}
+
+function toggleSongDetail(element) {
+  const detail = element.nextElementSibling;
+  if (!detail || !detail.classList.contains('song-detail')) return;
+  const isOpen = detail.classList.contains('open');
+  if (isOpen) {
+    detail.classList.remove('open');
+    element.classList.remove('opened');
+  } else {
+    detail.classList.add('open');
+    element.classList.add('opened');
+  }
+}
+
+function renderResults() {
+  const container = document.getElementById('resultsContainer');
+  const freq = buildSongFreq();
+  const allSongs = buildAllSongs();
+  const searchTerm = getSearchTerm();
+  const sortMode = getSortMode();
+
+  // 1. Build items list
+  let items = [];
+
+  // Collected songs
+  freq.forEach((data, name) => {
+    items.push({ name, count: data.count, lives: data.lives, type: 'collected' });
+  });
+
+  // Missing songs
+  allSongs.forEach((info, name) => {
+    if (!freq.has(name)) {
+      items.push({ name, count: 0, lives: [], type: 'missing', firstDate: info.firstDate, firstLive: info.firstLive });
+    }
+  });
+
+  // 2. Filter
+  if (currentFilter === 'collected') items = items.filter(i => i.type === 'collected');
+  if (currentFilter === 'missing') items = items.filter(i => i.type === 'missing');
+
+  // 3. Search
+  if (searchTerm) {
+    items = items.filter(i => i.name.toLowerCase().includes(searchTerm));
+  }
+
+  // 4. Sort
+  switch (sortMode) {
+    case 'alpha':
+      items.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      break;
+    case 'release':
+      items.sort((a, b) => {
+        const dA = a.lives[0]?.date || a.firstDate || '9999';
+        const dB = b.lives[0]?.date || b.firstDate || '9999';
+        return dA.localeCompare(dB) || a.name.localeCompare(b.name, 'ja');
+      });
+      break;
+    case 'freq':
+    default:
+      items.sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ja'));
+      break;
+  }
+
+  // 5. Stats
+  const totalPerformances = liveData.reduce((sum, l) => sum + l.sets.length, 0);
+  const selectedCount = selectedPerformances.size;
+  const totalSongs = allSongs.size;
+  const collectedCount = freq.size;
+
+  document.getElementById('statPerfNum').textContent = selectedCount;
+  document.getElementById('statPerfTotal').textContent = totalPerformances;
+  document.getElementById('statPerfBar').style.width = totalPerformances > 0 ? (selectedCount / totalPerformances * 100) + '%' : '0%';
+  document.getElementById('statPerfPct').textContent = totalPerformances > 0 ? Math.round(selectedCount / totalPerformances * 100) + '%' : '0%';
+
+  document.getElementById('statSongNum').textContent = collectedCount;
+  document.getElementById('statSongTotal').textContent = totalSongs;
+  document.getElementById('statSongBar').style.width = totalSongs > 0 ? (collectedCount / totalSongs * 100) + '%' : '0%';
+  document.getElementById('statSongPct').textContent = totalSongs > 0 ? Math.round(collectedCount / totalSongs * 100) + '%' : '0%';
+
+  // 6. Render list
+  if (items.length === 0) {
+    container.innerHTML = `<div class="no-results">
+      <div class="emoji">🔍</div>
+      <p>${I18N[currentLang].noMatch}</p>
+    </div>`;
+    return;
+  }
+
+  let html = `<div class="song-list">`;
+  items.forEach((item, idx) => {
+    const rank = String(idx + 1).padStart(2, '0');
+    const cls = item.type === 'collected' ? 'collected' : 'missing';
+    const hasLives = item.lives.length > 0;
+    const toggleIcon = hasLives ? '▼' : '';
+
+    html += `<div class="song-row ${cls}" onclick="toggleSongDetail(this)">
+      <div class="song-rank">${rank}</div>
+      <div class="song-name">${escapeHtml(item.name)}</div>
+      <div class="song-count">${item.count}</div>
+      <div class="song-toggle">${toggleIcon}</div>
+    </div>`;
+
+    if (hasLives) {
+      html += `<div class="song-detail">
+        <div class="song-detail-inner">
+          <div class="detail-title">${currentLang === 'zh' ? '出演LIVE' : '出演LIVE'}</div>
+          <div class="detail-lives">`;
+      item.lives.forEach(l => {
+        html += `<span class="detail-tag">${escapeHtml(l.title.split(' ').slice(0, 3).join(' '))} · ${escapeHtml(l.label)}</span>`;
+      });
+      html += `</div></div></div>`;
+    }
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+// ============================================================
+// Image Export — html2canvas + Web Share API
+// ============================================================
+
+async function exportImage() {
+  const userId = document.getElementById('userIdInput')?.value?.trim();
+  const titlePrefix = userId ? userId + ' の ' : '';
+  
+  // 创建导出容器
+  const exportContainer = document.createElement('div');
+  exportContainer.id = 'exportCapture';
+  exportContainer.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 600px; background: var(--bg); padding: 2rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", sans-serif;';
+  
+  // 添加标题
+  const titleDiv = document.createElement('div');
+  titleDiv.style.cssText = 'text-align: center; margin-bottom: 1.5rem;';
+  titleDiv.innerHTML = '<h1 style="font-size: 1.8rem; color: var(--accent); margin-bottom: 0.5rem;">' + titlePrefix + '蓮ノ空 楽曲回収チェッカー</h1>';
+  exportContainer.appendChild(titleDiv);
+  
+  // 添加统计卡片
+  const statsDiv = document.createElement('div');
+  statsDiv.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1.5rem;';
+  
+  // 参战LIVE统计
+  const liveStats = document.createElement('div');
+  liveStats.style.cssText = 'flex: 1; background: var(--card-bg); border-radius: 12px; padding: 1rem; box-shadow: var(--shadow);';
+  const totalPerformances = selectedPerformances.size;
+  const totalPossible = liveData.reduce((sum, l) => sum + l.sets.length, 0);
+  liveStats.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-secondary);">参戦LIVE</div><div style="font-size: 2rem; font-weight: 700; color: var(--accent);">' + totalPerformances + '<span style="font-size: 1rem; color: var(--text-secondary);"> / ' + totalPossible + '</span></div>';
+  statsDiv.appendChild(liveStats);
+  
+  // 回収楽曲统计
+  const songStats = document.createElement('div');
+  songStats.style.cssText = 'flex: 1; background: var(--card-bg); border-radius: 12px; padding: 1rem; box-shadow: var(--shadow);';
+  const freq = buildSongFreq();
+  const allSongs = buildAllSongs();
+  songStats.innerHTML = '<div style="font-size: 0.8rem; color: var(--text-secondary);">回収楽曲</div><div style="font-size: 2rem; font-weight: 700; color: var(--accent);">' + freq.size + '<span style="font-size: 1rem; color: var(--text-secondary);"> / ' + allSongs.size + '</span></div>';
+  statsDiv.appendChild(songStats);
+  
+  exportContainer.appendChild(statsDiv);
+  
+  // 添加歌曲列表（Top 30）
+  const songList = document.createElement('div');
+  songList.style.cssText = 'background: var(--card-bg); border-radius: 12px; padding: 1rem; box-shadow: var(--shadow);';
+  
+  const sortedSongs = [...freq.entries()].sort((a, b) => b[1].count - a[1].count).slice(0, 30);
+  
+  sortedSongs.forEach(([name, data], index) => {
+    const songRow = document.createElement('div');
+    songRow.style.cssText = 'display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--divider);';
+    songRow.innerHTML = '<span style="width: 30px; color: var(--text-secondary); font-size: 0.9rem;">' + (index + 1) + '</span><span style="flex: 1; font-weight: 500;">' + name + '</span><span style="background: var(--accent); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem;">' + data.count + '回</span>';
+    songList.appendChild(songRow);
+  });
+  
+  exportContainer.appendChild(songList);
+  
+  // 添加作者信息
+  const authorDiv = document.createElement('div');
+  authorDiv.style.cssText = 'text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-secondary);';
+  authorDiv.textContent = '作者：绯幻乱漫';
+  exportContainer.appendChild(authorDiv);
+  
+  document.body.appendChild(exportContainer);
+  
+  try {
+    const canvas = await html2canvas(exportContainer, {
+      scale: 2,
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(),
+      useCORS: true,
+      logging: false
+    });
+    
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([''], 'test.png', { type: 'image/png' })] })) {
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'hasunosora-music-checker.png', { type: 'image/png' });
+      await navigator.share({
+        title: titlePrefix + '蓮ノ空 楽曲回収チェッカー',
+        files: [file]
+      });
+    } else {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'hasunosora-music-checker.png';
+      a.click();
+    }
+  } catch (error) {
+    console.error('Export failed:', error);
+    alert('图片生成失败，请重试');
+  } finally {
+    document.body.removeChild(exportContainer);
+  }
+}
+
+// ============================================================
+// PAGE NAVIGATION
+// ============================================================
+function goToResults() {
+  if (selectedPerformances.size === 0) return;
+  document.getElementById('pageSelect').classList.remove('active');
+  document.getElementById('pageResults').classList.add('active');
+  document.getElementById('searchInput').value = '';
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'all'));
+  window.scrollTo(0, 0);
+  renderResults();
+}
+
+function backToSelect() {
+  document.getElementById('pageResults').classList.remove('active');
+  document.getElementById('pageSelect').classList.add('active');
+  window.scrollTo(0, 0);
+  renderSelect();
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+currentLang = detectLang();
+setLang(currentLang);
+</script>
+
+</body>
+</html>
