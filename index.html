@@ -6156,6 +6156,12 @@ async function exportImage() {
   const userId = document.getElementById('userIdInput')?.value?.trim();
   const titlePrefix = userId ? userId + ' の ' : '';
   
+  // 显示加载状态
+  const btn = document.getElementById('btnExport');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<span>⏳</span><span>' + (currentLang === 'ja' ? '生成中…' : '生成中…') + '</span>';
+  btn.disabled = true;
+  
   // 创建导出容器
   const exportContainer = document.createElement('div');
   exportContainer.id = 'exportCapture';
@@ -6222,24 +6228,43 @@ async function exportImage() {
     
     const dataUrl = canvas.toDataURL('image/png');
     
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([''], 'test.png', { type: 'image/png' })] })) {
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'hasunosora-music-checker.png', { type: 'image/png' });
-      await navigator.share({
-        title: titlePrefix + '蓮ノ空 楽曲回収チェッカー',
-        files: [file]
-      });
-    } else {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'hasunosora-music-checker.png';
-      a.click();
-    }
+    // 创建弹窗显示图片
+    const overlay = document.createElement('div');
+    overlay.id = 'imageOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto;';
+    
+    // 关闭按钮
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;';
+    closeBtn.onclick = () => overlay.remove();
+    overlay.appendChild(closeBtn);
+    
+    // 提示文字
+    const hint = document.createElement('p');
+    hint.textContent = currentLang === 'ja' ? '画像を長押しで保存してください' : '长按图片保存';
+    hint.style.cssText = 'color: white; font-size: 0.9rem; margin-bottom: 1rem; text-align: center;';
+    overlay.appendChild(hint);
+    
+    // 图片
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.cssText = 'max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);';
+    img.onclick = (e) => e.stopPropagation();
+    overlay.appendChild(img);
+    
+    // 点击背景关闭
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+    
+    document.body.appendChild(overlay);
+    
   } catch (error) {
     console.error('Export failed:', error);
-    alert('图片生成失败，请重试');
+    alert(currentLang === 'ja' ? '画像生成に失敗しました' : '图片生成失败，请重试');
   } finally {
     document.body.removeChild(exportContainer);
+    btn.innerHTML = origText;
+    btn.disabled = false;
   }
 }
 
