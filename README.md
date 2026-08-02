@@ -1,6 +1,8 @@
-# 蓮ノ空 楽曲回収チェッカー
+# LIVE 楽曲回収チェッカー
 
-莲之空女学院学园偶像俱乐部（LoveLive! 莲之空）LIVE乐曲回收检查器 — 记录你在演唱会上听过的歌曲！
+LoveLive! 系列 LIVE 乐曲回收检查器 — 记录你在演唱会上听过的歌曲！
+
+支持系列：🪷 蓮ノ空女学院 / 🌈 虹ヶ咲学園
 
 灵感来源：[水濑祈乐曲回收检查器](https://inori-minase-music-checker.vercel.app/)
 
@@ -16,10 +18,13 @@
 - 📷 生成图片保存（长按保存）
 - 🌐 中日双语切换
 - 👤 支持输入用户 ID 个性化图片标题
+- 🎨 系列主题色切换（莲之空粉色 / 虹咲橙色）
 
 ## 收录数据
 
 数据来源：[LL-Fans](https://ll-fans.jp/data/event)（主要）、萌娘百科、LLWiki
+
+### 🪷 蓮ノ空女学院
 
 | 年份 | LIVE | 场次 | 曲次 |
 |------|------|------|------|
@@ -36,7 +41,29 @@
 | 2026 | 103-105th Fes×ReC:LIVE ～Road to Bloom～ | 4 | 64 |
 | 2026 | 6th Live Dream ～Bloom Garden Party～ | 8 | 258 |
 
-**总计：12 个 LIVE · 59 个场次 · 1366 曲次 · 152 独立曲目**
+**莲之空总计：12 个 LIVE · 59 个场次 · 1366 曲次**
+
+### 🌈 虹ヶ咲学園
+
+| 年份 | LIVE | 场次 | 曲次 |
+|------|------|------|------|
+| 2019 | 校内マッチングフェスティバル | 2 | 20 |
+| 2019 | First Live "with You" | 2 | 43 |
+| 2020 | 2nd Live! Brand New Story / Back to the TOKIMEKI | 2 | 49 |
+| 2021 | 校内シャッフルフェスティバル | 2 | 32 |
+| 2021 | 3rd Live! School Idol Festival | 2 | 48 |
+| 2021-22 | UNIT LIVE & FAN MEETING | 8 | 90 |
+| 2022 | 4th Live! ～Love the Life We Live～ | 2 | 50 |
+| 2022 | 5th Live! 虹が咲く場所 | 4 | 115 |
+| 2023 | UNIT LIVE! | 8 | 176 |
+| 2023 | にじたび！TOKIMEKI FAN MEETING TOUR | 18 | 144 |
+| 2023-24 | 6th Live! I love You ⇆ You love Me | 4 | 119 |
+| 2024 | 7th Live! NEW TOKIMEKI LAND | 2 | 58 |
+| 2025 | FMT ニジガク校外学習 | 18 | 144 |
+| 2026 | FLOWER MUSIC LIVE | 2 | 44 |
+| 2026 | 8th Live! TOKIMEKI Express | 4 | 137 |
+
+**虹咲总计：15 个 LIVE · 64 个场次 · 872+ 曲次**
 
 ## 部署方法
 
@@ -60,19 +87,6 @@ npx serve .
 
 浏览器打开 `http://localhost:8080`
 
-## 数据更新
-
-如需更新曲目数据，可使用爬虫脚本从 LL-Fans 获取：
-
-```bash
-# 安装依赖
-pip install playwright
-playwright install chromium
-
-# 运行爬虫（需启动 Clash 代理，配置在 E:\Tool\VPN配置文件.yaml）
-python scrape_hasunosora.py
-```
-
 ## 联系作者
 
 - QQ: 908283643
@@ -86,6 +100,6 @@ python scrape_hasunosora.py
 
 ## 许可证
 
-本项目为非官方粉丝工具。蓮ノ空女学院スクールアイドルクラブ及 LoveLive! 系列版权归各权利方所有。
+本项目为非官方粉丝工具。蓮ノ空女学院スクールアイドルクラブ、虹ヶ咲学園スクールアイドル同好会及 LoveLive! 系列版权归各权利方所有。
 
 数据来源：[LL-Fans](https://ll-fans.jp/data/event)、萌娘百科、LLWiki
