@@ -10865,7 +10865,8 @@ async function exportImage() {
   // 添加标题
   const titleDiv = document.createElement('div');
   titleDiv.style.cssText = 'text-align: center; margin-bottom: 1.5rem;';
-  titleDiv.innerHTML = '<h1 style="font-size: 1.8rem; color: var(--accent); margin-bottom: 0.5rem;">' + titlePrefix + '蓮ノ空 楽曲回収チェッカー</h1>';
+  const seriesTitle = currentSeries === 'hasunosora' ? '蓮ノ空 楽曲回収チェッカー' : '虹ヶ咲 楽曲回収チェッカー';
+  titleDiv.innerHTML = '<h1 style="font-size: 1.8rem; color: var(--accent); margin-bottom: 0.5rem;">' + titlePrefix + seriesTitle + '</h1>';
   exportContainer.appendChild(titleDiv);
   
   // 添加统计卡片
