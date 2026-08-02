@@ -11042,6 +11042,8 @@ function setSeries(series) {
   // 清除旧选中
   selectedPerformances.clear();
   saveSelection();
+  // 切换主题颜色
+  applyTheme(series);
   // 更新选择页的 renderSelect 和 UI
   applySeriesUI();
   saveUIState();
@@ -11050,6 +11052,60 @@ function setSeries(series) {
   if (pageSelect && pageSelect.classList.contains('active')) {
     renderSelect();
   }
+}
+
+// 主题颜色配置
+const THEMES = {
+  hasunosora: {
+    '--bg': '#faf5f7',
+    '--accent': '#e8739a',
+    '--accent-light': '#fde4ec',
+    '--accent-gradient': 'linear-gradient(135deg, #e8739a, #f0a0be)',
+    '--border': '#f0d8e0',
+    '--shadow': '0 2px 12px rgba(232, 115, 154, 0.08)',
+    '--shadow-hover': '0 4px 20px rgba(232, 115, 154, 0.15)',
+    '--cherry': '#e8739a',
+    '--cherry-dark': '#c44569',
+    '--cherry-light': '#fdf0f4',
+    '--select-border': '#e0c8d0',
+    '--progress-bg': '#f5e8ec',
+    '--divider': '#f5e8ec',
+    '--tag-bg': '#fde4ec',
+    '--tag-text': '#c44569',
+    'theme-color': '#e8739a'
+  },
+  nijigasaki: {
+    '--bg': '#fdf8f0',
+    '--accent': '#f5a623',
+    '--accent-light': '#fff3e0',
+    '--accent-gradient': 'linear-gradient(135deg, #f5a623, #ffcc80)',
+    '--border': '#f0e0c8',
+    '--shadow': '0 2px 12px rgba(245, 166, 35, 0.08)',
+    '--shadow-hover': '0 4px 20px rgba(245, 166, 35, 0.15)',
+    '--cherry': '#f5a623',
+    '--cherry-dark': '#e65100',
+    '--cherry-light': '#fff8e1',
+    '--select-border': '#e0d0b8',
+    '--progress-bg': '#f5ece0',
+    '--divider': '#f5ece0',
+    '--tag-bg': '#fff3e0',
+    '--tag-text': '#e65100',
+    'theme-color': '#f5a623'
+  }
+};
+
+function applyTheme(series) {
+  const theme = THEMES[series] || THEMES.hasunosora;
+  const root = document.documentElement;
+  Object.keys(theme).forEach(key => {
+    if (key === 'theme-color') {
+      // 更新 meta theme-color
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', theme[key]);
+    } else {
+      root.style.setProperty(key, theme[key]);
+    }
+  });
 }
 
 // ============================================================
@@ -11061,6 +11117,8 @@ currentLang = detectLang();
 if (currentSeries === 'nijigasaki') {
   liveData = nijigasakiData;
 }
+// 应用主题颜色
+applyTheme(currentSeries);
 setLang(currentLang);
 applySeriesUI();
 </script>
